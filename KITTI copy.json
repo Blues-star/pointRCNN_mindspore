@@ -1,0 +1,62 @@
+{
+  "columns": [
+    {
+      "name": "sample_id",
+      "rank": 1,
+      "type": "int32"
+    },
+    {
+      "name": "pts_input",
+      "rank": 2,
+      "shape": [
+        16384,
+        4
+      ],
+      "type": "float32"
+    },
+    {
+      "name": "pts_rect",
+      "rank": 2,
+      "shape": [
+        16384,
+        3
+      ],
+      "type": "float32"
+    },
+    {
+      "name": "pts_features",
+      "rank": 2,
+      "shape": [
+        16384,
+        1
+      ],
+      "type": "float32"
+    },
+    {
+      "name": "rpn_cls_label",
+      "rank": 1,
+      "shape": [
+        16384
+      ],
+      "type": "float32"
+    },
+    {
+      "name": "rpn_reg_label",
+      "rank": 2,
+      "shape": [
+        16384,
+        7
+      ],
+      "type": "float32"
+    },
+    {
+      "name": "gt_boxes3d",
+      "rank": 2,
+      "shape": [
+        -1,
+        7
+      ],
+      "type": "float32"
+    }
+  ]
+}

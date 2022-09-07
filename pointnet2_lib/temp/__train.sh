@@ -1,0 +1,1 @@
+python train.py --batch_size=24 --learning_rate=0.001 --data_path=modelnet40_normal_resampled

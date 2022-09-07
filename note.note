@@ -1,0 +1,14 @@
+layer_utils.py中有两个需要cuda算子
+
+RPN网络的入参只有点云数据
+RCNN 的入参：
+    input_data['rpn_xyz']
+    input_data['rpn_features']
+    input_data['roi_boxes3d']
+    input_data['rpn_intensity']
+    input_data['seg_mask']
+    input_data['pts_depth']
+    input_data['pts_input']
+    input_data['cls_label']
+    input_data['reg_valid_mask']
+    input_data['gt_boxes3d_ct']

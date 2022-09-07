@@ -1,0 +1,11 @@
+*.so
+*.pyc
+*.egg
+*.o
+/data/KITTI/*
+!/data
+/.vscode/
+/pretrain_pth/
+*.dat
+build/
+*.egg-info
