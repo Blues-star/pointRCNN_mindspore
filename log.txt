@@ -1,0 +1,1480 @@
+FurthestPointSampling
+(1, 4096)
+GatherOperation
+(1, 3, 4096)
+BallQuery
+(1, 4096, 16)
+GroupingOperation
+(1, 3, 4096, 16)
+BallQuery
+(1, 4096, 32)
+GroupingOperation
+(1, 3, 4096, 32)
+FurthestPointSampling
+(1, 1024)
+GatherOperation
+(1, 3, 1024)
+BallQuery
+(1, 1024, 16)
+GroupingOperation
+(1, 3, 1024, 16)
+GroupingOperation
+(1, 96, 1024, 16)
+BallQuery
+(1, 1024, 32)
+GroupingOperation
+(1, 3, 1024, 32)
+GroupingOperation
+(1, 96, 1024, 32)
+FurthestPointSampling
+(1, 256)
+GatherOperation
+(1, 3, 256)
+BallQuery
+(1, 256, 16)
+GroupingOperation
+(1, 3, 256, 16)
+GroupingOperation
+(1, 256, 256, 16)
+BallQuery
+(1, 256, 32)
+GroupingOperation
+(1, 3, 256, 32)
+GroupingOperation
+(1, 256, 256, 32)
+FurthestPointSampling
+(1, 64)
+GatherOperation
+(1, 3, 64)
+BallQuery
+(1, 64, 16)
+GroupingOperation
+(1, 3, 64, 16)
+GroupingOperation
+(1, 512, 64, 16)
+BallQuery
+(1, 64, 32)
+GroupingOperation
+(1, 3, 64, 32)
+GroupingOperation
+(1, 512, 64, 32)
+ThreeInterpolate
+(1, 1024, 256)
+ThreeInterpolate
+(1, 512, 1024)
+ThreeInterpolate
+(1, 512, 4096)
+ThreeInterpolate
+(1, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)
+ThreeInterpolate
+(2, 1024, 256)
+ThreeInterpolate
+(2, 512, 1024)
+ThreeInterpolate
+(2, 512, 4096)
+ThreeInterpolate
+(2, 256, 16384)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+FurthestPointSampling
+(2, 4096)
+GatherOperation
+(2, 3, 4096)
+BallQuery
+(2, 4096, 16)
+GroupingOperation
+(2, 3, 4096, 16)
+BallQuery
+(2, 4096, 32)
+GroupingOperation
+(2, 3, 4096, 32)
+FurthestPointSampling
+(2, 1024)
+GatherOperation
+(2, 3, 1024)
+BallQuery
+(2, 1024, 16)
+GroupingOperation
+(2, 3, 1024, 16)
+GroupingOperation
+(2, 96, 1024, 16)
+BallQuery
+(2, 1024, 32)
+GroupingOperation
+(2, 3, 1024, 32)
+GroupingOperation
+(2, 96, 1024, 32)
+FurthestPointSampling
+(2, 256)
+GatherOperation
+(2, 3, 256)
+BallQuery
+(2, 256, 16)
+GroupingOperation
+(2, 3, 256, 16)
+GroupingOperation
+(2, 256, 256, 16)
+BallQuery
+(2, 256, 32)
+GroupingOperation
+(2, 3, 256, 32)
+GroupingOperation
+(2, 256, 256, 32)
+FurthestPointSampling
+(2, 64)
+GatherOperation
+(2, 3, 64)
+BallQuery
+(2, 64, 16)
+GroupingOperation
+(2, 3, 64, 16)
+GroupingOperation
+(2, 512, 64, 16)
+BallQuery
+(2, 64, 32)
+GroupingOperation
+(2, 3, 64, 32)
+GroupingOperation
+(2, 512, 64, 32)

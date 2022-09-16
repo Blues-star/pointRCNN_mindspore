@@ -52,7 +52,7 @@ def decode_bbox_target(roi_box3d,
     :param get_ry_fine:
     :return:
     """
-    anchor_size = anchor_size.to(roi_box3d.get_device())
+    # anchor_size = anchor_size.to(roi_box3d.get_device())
     per_loc_bin_num = int(loc_scope / loc_bin_size) * 2
     loc_y_bin_num = int(loc_y_scope / loc_y_bin_size) * 2
 
@@ -62,7 +62,7 @@ def decode_bbox_target(roi_box3d,
     start_offset = z_bin_r
 
     argmax = ops.Argmax(1)
-    gather = ops.GatherD()
+    # gather = ops.GatherD()
     # x_bin = torch.argmax(pred_reg[:, x_bin_l: x_bin_r], dim=1)
     # z_bin = torch.argmax(pred_reg[:, z_bin_l: z_bin_r], dim=1)
     x_bin: ms.Tensor = argmax(pred_reg[:, x_bin_l:x_bin_r])
@@ -79,12 +79,10 @@ def decode_bbox_target(roi_box3d,
         z_res_l, z_res_r = per_loc_bin_num * 3, per_loc_bin_num * 4
         start_offset = z_res_r
 
-        x_res_norm = gather(pred_reg[:, x_res_l:x_res_r],
-                            1,
-                            index=unsqueeze(x_bin, 1)).squeeze(axis=1)
-        z_res_norm = gather(pred_reg[:, z_res_l:z_res_r],
-                            1,
-                            index=unsqueeze(z_bin, 1)).squeeze(axis=1)
+        x_res_norm = ops.gather_elements(pred_reg[:, x_res_l:x_res_r], 1,
+                                         unsqueeze(x_bin, 1)).squeeze(axis=1)
+        z_res_norm = ops.gather_elements(pred_reg[:, z_res_l:z_res_r], 1,
+                                         unsqueeze(z_bin, 1)).squeeze(axis=1)
         x_res = x_res_norm * loc_bin_size
         z_res = z_res_norm * loc_bin_size
 
@@ -98,9 +96,10 @@ def decode_bbox_target(roi_box3d,
         start_offset = y_res_r
 
         y_bin = argmax(pred_reg[:, y_bin_l:y_bin_r], dim=1)
-        y_res_norm = gather(pred_reg[:, y_res_l:y_res_r],
-                            dim=1,
-                            index=unsqueeze(y_bin, 1)).squeeze(axis=1)
+        y_res_norm = ops.gather_elements(pred_reg[:, y_res_l:y_res_r],
+                                         dim=1,
+                                         index=unsqueeze(y_bin,
+                                                         1)).squeeze(axis=1)
         y_res = y_res_norm * loc_y_bin_size
         pos_y = y_bin.astype(
             ms.float32
@@ -117,9 +116,10 @@ def decode_bbox_target(roi_box3d,
     ry_res_l, ry_res_r = ry_bin_r, ry_bin_r + num_head_bin
     argmax = ops.Argmax(1)
     ry_bin = argmax(pred_reg[:, ry_bin_l:ry_bin_r])
-    ry_res_norm = gather(pred_reg[:, ry_res_l:ry_res_r],
-                         dim=1,
-                         index=unsqueeze(ry_bin, 1)).squeeze(axis=1)
+    ry_res_norm = ops.gather_elements(pred_reg[:, ry_res_l:ry_res_r],
+                                      dim=1,
+                                      index=unsqueeze(ry_bin,
+                                                      1)).squeeze(axis=1)
     if get_ry_fine:
         # divide pi/2 into several bins
         angle_per_class = (np.pi / 2) / num_head_bin
@@ -133,7 +133,8 @@ def decode_bbox_target(roi_box3d,
         # bin_center is (0, 30, 60, 90, 120, ..., 270, 300, 330)
         ry = (ry_bin.astype(ms.float32) * angle_per_class + ry_res) % (2 *
                                                                        np.pi)
-        ry[ry > np.pi] -= 2 * np.pi
+        ry = ops.select(ry > np.pi, ry - 2 * np.pi, ry)
+        # ry[ry > np.pi] -= 2 * np.pi
 
     # recover size
     size_res_l, size_res_r = ry_res_r, ry_res_r + 3

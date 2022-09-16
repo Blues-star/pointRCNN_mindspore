@@ -4,7 +4,10 @@ import lib.utils.kitti_utils as kitti_utils
 import mindspore as ms
 from mindspore import ops
 from pathlib import Path
-from lib.net.layer_utils import get_func_from_so
+import os,sys
+from pathlib import Path
+sys.path.insert(0,Path(__file__).absolute().parent.parent.parent.parent.parent)
+from tools.layer_utils import get_func_from_so
 
 
 so_name = "iou3d_cuda.cpython-39-x86_64-linux-gnu.so"
@@ -22,8 +25,8 @@ def boxes_iou_bev(boxes_a, boxes_b):
 
     # iou3d_cuda.boxes_iou_bev_gpu(boxes_a, boxes_b, ans_iou)
     so_name = "iou3d_cuda.cpython-39-x86_64-linux-gnu.so"
-    op_boxes_iou_bev_gpu = get_func_from_so(so_name,"boxes_iou_bev_gpu",-1)
-    op_boxes_iou_bev_gpu(boxes_a, boxes_b, ans_iou)
+    op_boxes_iou_bev_gpu = get_func_from_so(so_name,"boxes_iou_bev_gpu",out_shape=(boxes_a.shape[0], boxes_b.shape[0]),out_dtype=ms.float32)
+    ans_iou = op_boxes_iou_bev_gpu(boxes_a, boxes_b)
 
     return ans_iou
 
@@ -40,10 +43,11 @@ def boxes_iou3d_gpu(boxes_a, boxes_b):
 
     # bev overlap
     # overlaps_bev = torch.cuda.FloatTensor(torch.Size((boxes_a.shape[0], boxes_b.shape[0]))).zero_()  # (N, M)
-    overlaps_bev = ms.numpy.zeros((boxes_a.shape[0], boxes_b.shape[0]))
+    # overlaps_bev = ms.numpy.zeros((boxes_a.shape[0], boxes_b.shape[0]))
     # iou3d_cuda.boxes_overlap_bev_gpu(boxes_a_bev, boxes_b_bev, overlaps_bev)
-    boxes_overlap_bev_gpu = get_func_from_so(so_name,"boxes_overlap_bev_gpu")
-    boxes_overlap_bev_gpu(boxes_a_bev, boxes_b_bev, overlaps_bev)
+    boxes_overlap_bev_gpu_op = get_func_from_so(so_name,"boxes_overlap_bev_gpu",out_shape=(boxes_a.shape[0], boxes_b.shape[0]),out_dtype=ms.float32)
+    # boxes_overlap_bev_gpu_op(boxes_a_bev, boxes_b_bev, overlaps_bev)
+    overlaps_bev = boxes_overlap_bev_gpu_op(boxes_a_bev, boxes_b_bev)
     # height overlap
     boxes_a_height_min = (boxes_a[:, 1] - boxes_a[:, 3]).view(-1, 1)
     boxes_a_height_max = boxes_a[:, 1].view(-1, 1)
@@ -65,7 +69,7 @@ def boxes_iou3d_gpu(boxes_a, boxes_b):
 
     return iou3d
 
-
+nms_gpu_op = get_func_from_so(so_name,"nms_gpu",out_shape=(1,),out_dtype=ms.int32)
 def nms_gpu(boxes, scores, thresh):
     """
     :param boxes: (N, 5) [x1, y1, x2, y2, ry]
@@ -83,12 +87,11 @@ def nms_gpu(boxes, scores, thresh):
     keep = ms.numpy.zeros((boxes.shape[0]),ms.int64)
     num_out:ms.Tensor = ms.numpy.zeros((1), ms.int32)
     # num_out = iou3d_cuda.nms_gpu(boxes, keep, thresh)
-    nms_gpu = get_func_from_so(so_name,"nms_gpu",out_shape=(1,),out_dtype=ms.int32)
-    num_out = nms_gpu(boxes, keep, thresh)
+    num_out = nms_gpu_op(boxes, keep, thresh)
     num_out = num_out.asnumpy().item()
     return order[keep[:num_out]]
 
-
+nms_normal_gpu_op = get_func_from_so(so_name,"nms_normal_gpu",out_shape=(1,),out_dtype=ms.int32)
 def nms_normal_gpu(boxes, scores, thresh):
     """
     :param boxes: (N, 5) [x1, y1, x2, y2, ry]
@@ -105,8 +108,8 @@ def nms_normal_gpu(boxes, scores, thresh):
     keep = ms.numpy.zeros((boxes.shape[0]), ms.int64)
     # num_out = iou3d_cuda.nms_normal_gpu(boxes, keep, thresh)
     # num_out:ms.Tensor = ms.numpy.zeros((1), ms.int32)
-    nms_normal_gpu = get_func_from_so(so_name,"nms_normal_gpu",out_shape=(1,),out_dtype=ms.int32)
-    num_out = nms_normal_gpu(boxes, keep, thresh)
+    
+    num_out = nms_normal_gpu_op(boxes, keep, thresh)
     num = num_out.asnumpy().item()
     return order[keep[:num]]
 

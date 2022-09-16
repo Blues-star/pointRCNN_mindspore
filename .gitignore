@@ -2,10 +2,15 @@
 *.pyc
 *.egg
 *.o
-/data/KITTI/*
-!/data
+/data/KITTI/object/
+!data
 /.vscode/
 /pretrain_pth/
 *.dat
 build/
 *.egg-info
+dist/
+__pycache__/
+rank_0/
+*.egg-info/
+*.pkl

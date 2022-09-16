@@ -9,9 +9,9 @@ from mindspore.ops import functional
 from mindspore import Tensor
 from mindspore.common.initializer import initializer
 # from pointnet2_lib.pointnet2.pointnet2_modules import PointnetSAModule
-from .layer_utils import PointnetSAModule
+from tools.layer_utils import PointnetSAModule
 from lib.rpn.proposal_target_layer import ProposalTargetLayer
-from . import layer_utils as pt_utils
+from tools import layer_utils as pt_utils
 import lib.utils.loss_utils as loss_utils
 from lib.config import cfg
 
@@ -59,7 +59,7 @@ class RCNNNet(nn.Cell):
             pre_channel = cfg.RCNN.CLS_FC[k]
         cls_layers.append(pt_utils.Conv1d(pre_channel, cls_channel, activation=None))
         if cfg.RCNN.DP_RATIO >= 0:
-            cls_layers.insert(1, nn.Dropout(cfg.RCNN.DP_RATIO))
+            cls_layers.insert(1, nn.Dropout(1-cfg.RCNN.DP_RATIO))
         self.cls_layer = nn.SequentialCell(cls_layers)
 
         if cfg.RCNN.LOSS_CLS == 'SigmoidFocalLoss':
@@ -89,7 +89,7 @@ class RCNNNet(nn.Cell):
             pre_channel = cfg.RCNN.REG_FC[k]
         reg_layers.append(pt_utils.Conv1d(pre_channel, reg_channel, activation=None))
         if cfg.RCNN.DP_RATIO >= 0:
-            reg_layers.insert(1, nn.Dropout(cfg.RCNN.DP_RATIO))
+            reg_layers.insert(1, nn.Dropout(1-cfg.RCNN.DP_RATIO))
         self.reg_layer = nn.SequentialCell(*reg_layers)
 
         self.proposal_target_layer = ProposalTargetLayer()

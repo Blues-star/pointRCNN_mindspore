@@ -21,6 +21,11 @@ import mindspore.numpy as mnp
 import mindspore.ops as P
 from mindspore.common.tensor import Tensor
 from mindspore.ops.primitive import constexpr
+import os,sys
+from pathlib import Path
+
+from layer_utils import FurthestPointSampling
+sys.path.insert(0,Path(__file__).absolute().parent.parent.parent.parent.parent)
 
 from .layers import Conv2d
 
@@ -82,32 +87,33 @@ def index_points(points, idx):
     return new_points
 
 
-def farthest_point_sample(xyz, npoint):
-    """
-    Input:
-        xyz: pointcloud data, [B, N, 3]
-        npoint: number of samples
-    Return:
-        centroids: sampled pointcloud index, [B, npoint]
-    """
-    B, N, _ = xyz.shape
-    centroids = mnp.zeros((npoint, B), ms.int32)
-    distance = mnp.ones((B, N), ms.int32) * 1e9
-    farthest = generate_tensor_fps(B, N)
-    batch_indices = generate_tensor_batch_indices(B)
-    for i in range(npoint):
-        centroids = P.Cast()(centroids, ms.float32)
-        farthest = P.Cast()(farthest, ms.float32)
-        centroids[i] = farthest
-        centroids = P.Cast()(centroids, ms.int32)
-        farthest = P.Cast()(farthest, ms.int32)
-        index = P.Concat(-1)((batch_indices.reshape(batch_indices.shape + (1,)),
-                              farthest.reshape(farthest.shape + (1,))))
-        centroid = P.GatherNd()(xyz, index).reshape((B, 1, 3))
-        dist = P.ReduceSum()((xyz - centroid) ** 2, -1)
-        distance = P.Minimum()(distance, dist)
-        farthest = P.Argmax()(distance)
-    return P.Transpose()(centroids, (1, 0))
+
+# def farthest_point_sample(xyz, npoint):
+#     """
+#     Input:
+#         xyz: pointcloud data, [B, N, 3]
+#         npoint: number of samples
+#     Return:
+#         centroids: sampled pointcloud index, [B, npoint]
+#     """
+#     B, N, _ = xyz.shape
+#     centroids = mnp.zeros((npoint, B), ms.int32)
+#     distance = mnp.ones((B, N), ms.int32) * 1e9
+#     farthest = generate_tensor_fps(B, N)
+#     batch_indices = generate_tensor_batch_indices(B)
+#     for i in range(npoint):
+#         centroids = P.Cast()(centroids, ms.float32)
+#         farthest = P.Cast()(farthest, ms.float32)
+#         centroids[i] = farthest
+#         centroids = P.Cast()(centroids, ms.int32)
+#         farthest = P.Cast()(farthest, ms.int32)
+#         index = P.Concat(-1)((batch_indices.reshape(batch_indices.shape + (1,)),
+#                               farthest.reshape(farthest.shape + (1,))))
+#         centroid = P.GatherNd()(xyz, index).reshape((B, 1, 3))
+#         dist = P.ReduceSum()((xyz - centroid) ** 2, -1)
+#         distance = P.Minimum()(distance, dist)
+#         farthest = P.Argmax()(distance)
+#     return P.Transpose()(centroids, (1, 0))
 
 
 def query_ball_point(radius, nsample, xyz, new_xyz):
@@ -168,7 +174,7 @@ def sample_and_group(npoint, radius, nsample, xyz, points):
     """
     B, _, C = xyz.shape
     S = npoint
-    fps_idx = farthest_point_sample(xyz, S)  # [B, S]
+    fps_idx = FurthestPointSampling(xyz, S)  # [B, S]
     new_xyz = index_points(xyz, fps_idx)  # [B, S, C]
     idx = query_ball_point(radius, nsample, xyz, new_xyz)  # [B, S, nsample]
     grouped_xyz = index_points(xyz, idx)  # [B, S, nsample, C]

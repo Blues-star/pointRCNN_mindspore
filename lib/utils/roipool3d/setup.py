@@ -9,7 +9,7 @@ setup(
             'src/ms_ext.cpp',
             'src/roipool3d_kernel.cu',
         ],
-        extra_compile_args={'cxx': ['-g','-O0'],
+        extra_compile_args={'cxx': ['-g','-O2'],
                             'nvcc': ['-O2']})
     ],
     cmdclass={'build_ext': BuildExtension})

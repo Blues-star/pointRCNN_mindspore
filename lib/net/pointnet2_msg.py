@@ -3,7 +3,7 @@
 import mindspore as ms
 from mindspore import nn,Tensor
 # from pointnet2_lib.pointnet2.pointnet2_modules import PointnetFPModule, PointnetSAModuleMSG
-from layer_utils import PointnetSAModuleMSG, PointnetFPModule
+from tools.layer_utils import PointnetSAModuleMSG, PointnetFPModule
 from lib.config import cfg
 
 

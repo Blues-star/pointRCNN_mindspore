@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import os
 import pickle
@@ -233,7 +234,23 @@ class KittiRCNNDataset(KittiDataset):
 
     def __getitem__(self, index):
         if cfg.RPN.ENABLED:
-            return self.get_rpn_sample(index)
+            item =  self.get_rpn_sample(index)
+            return tuple(item.values())
+        elif cfg.RCNN.ENABLED:
+            if self.mode == 'TRAIN':
+                if cfg.RCNN.ROI_SAMPLE_JIT:
+                    return self.get_rcnn_sample_jit(index)
+                else:
+                    return self.get_rcnn_training_sample_batch(index)
+            else:
+                return self.get_proposal_from_file(index)
+        else:
+            raise NotImplementedError
+    
+    def getitem_cols(self, index):
+        if cfg.RPN.ENABLED:
+            item =  self.get_rpn_sample(index)
+            return list(item.keys())
         elif cfg.RCNN.ENABLED:
             if self.mode == 'TRAIN':
                 if cfg.RCNN.ROI_SAMPLE_JIT:
@@ -338,7 +355,7 @@ class KittiRCNNDataset(KittiDataset):
         if cfg.AUG_DATA and self.mode == 'TRAIN':
             aug_pts_rect, aug_gt_boxes3d, aug_method = self.data_augmentation(aug_pts_rect, aug_gt_boxes3d, gt_alpha,
                                                                               sample_id)
-            sample_info['aug_method'] = aug_method
+            # sample_info['aug_method'] = aug_method
 
         # prepare input
         if cfg.RPN.USE_INTENSITY:
@@ -361,9 +378,10 @@ class KittiRCNNDataset(KittiDataset):
         sample_info['rpn_cls_label'] = rpn_cls_label
         sample_info['rpn_reg_label'] = rpn_reg_label
         sample_info['gt_boxes3d'] = aug_gt_boxes3d
-        # return sample_info
+        return sample_info
         # Tensor.from_numpy(sample_info["sample_id"]), Tensor.from_numpy(sample_info["pts_input"]), Tensor.from_numpy(sample_info["pts_rect"]), Tensor.from_numpy(sample_info["pts_features"]), Tensor.from_numpy(sample_info["rpn_cls_label"]), Tensor.from_numpy(sample_info["rpn_reg_label"]), Tensor.from_numpy(sample_info["gt_boxes3d"])
-        return sample_info["sample_id"], sample_info["pts_input"], sample_info["pts_rect"], sample_info["pts_features"], sample_info["rpn_cls_label"], sample_info["rpn_reg_label"], sample_info["gt_boxes3d"]
+        # return sample_info["sample_id"], sample_info["pts_input"], sample_info["pts_rect"], sample_info["pts_features"], sample_info["rpn_cls_label"], sample_info["rpn_reg_label"], sample_info["gt_boxes3d"]
+        # return tuple(sample_info.values())
 
     @staticmethod
     def generate_rpn_training_labels(pts_rect, gt_boxes3d):
@@ -487,9 +505,10 @@ class KittiRCNNDataset(KittiDataset):
 
             enlarged_box3d = new_gt_box3d.copy()
             enlarged_box3d[3] += 2  # remove the points above and below the object
-
+            # t1 = time.perf_counter()
             boxes_pts_mask_list = roipool3d_utils.pts_in_boxes3d_cpu(
                 Tensor.from_numpy(pts_rect), Tensor.from_numpy(enlarged_box3d.reshape(1, 7)))
+            # print(time.perf_counter()-t1)
             pt_mask_flag = (boxes_pts_mask_list[0].asnumpy() == 1)
             src_pts_flag[pt_mask_flag] = 0  # remove the original points which are inside the new box
 

@@ -136,6 +136,7 @@ extern "C" int ms_pts_in_boxes3d_cpu(int nparam, void **params, int *ndims, int6
 
     auto tensors = get_torch_tensors(nparam, params, ndims, shapes, dtypes, c10::kCPU);
     pts_in_boxes3d_cpu(tensors[0], tensors[1], tensors[2]);
+    tensors[3].copy_(tensors[0]);
     return 0;
 }
 

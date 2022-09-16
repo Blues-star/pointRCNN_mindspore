@@ -43,8 +43,8 @@ class ProposalLayer(nn.Cell):
         
         # ret_bbox3d = scores.new(batch_size, cfg[self.mode].RPN_POST_NMS_TOP_N, 7).zero_()
         # ret_scores = scores.new(batch_size, cfg[self.mode].RPN_POST_NMS_TOP_N).zero_()
-        ret_bbox3d = ops.zeros((batch_size, cfg[self.mode].RPN_POST_NMS_TOP_N, 7))
-        ret_scores = ops.zeros((batch_size, cfg[self.mode].RPN_POST_NMS_TOP_N))
+        ret_bbox3d = ms.numpy.zeros((batch_size, cfg[self.mode].RPN_POST_NMS_TOP_N, 7),scores.dtype)
+        ret_scores = ms.numpy.zeros((batch_size, cfg[self.mode].RPN_POST_NMS_TOP_N),scores.dtype)
         for k in range(batch_size):
             scores_single = scores[k]
             proposals_single = proposals[k]
@@ -83,16 +83,20 @@ class ProposalLayer(nn.Cell):
         proposals_ordered = proposals[order]
 
         dist = proposals_ordered[:, 2]
-        first_mask = (dist > nms_range_list[0]) & (dist <= nms_range_list[1])
+        # first_mask = (dist > nms_range_list[0]) & (dist <= nms_range_list[1])
+        first_mask = ops.logical_and((dist > nms_range_list[0]),(dist <= nms_range_list[1]))
         for i in range(1, len(nms_range_list)):
             # get proposal distance mask
-            dist_mask:ms.Tensor = ((dist > nms_range_list[i - 1]) & (dist <= nms_range_list[i]))
-
+            # dist_mask:ms.Tensor = ((dist > nms_range_list[i - 1]) & (dist <= nms_range_list[i]))
+            
+            dist_mask = ops.logical_and((dist > nms_range_list[i - 1]), (dist <= nms_range_list[i]))
             if dist_mask.sum() != 0:
                 # this area has points
                 # reduce by mask
-                cur_scores = scores_ordered[dist_mask]
-                cur_proposals = proposals_ordered[dist_mask]
+                # cur_scores = scores_ordered[dist_mask]
+                # cur_proposals = proposals_ordered[dist_mask]
+                cur_scores = ops.masked_select(scores_ordered,dist_mask)
+                cur_proposals = ops.masked_select(proposals_ordered,dist_mask)
 
                 # fetch pre nms top K
                 cur_scores = cur_scores[:pre_top_n_list[i]]
@@ -100,8 +104,10 @@ class ProposalLayer(nn.Cell):
             else:
                 assert i == 2, '%d' % i
                 # this area doesn't have any points, so use rois of first area
-                cur_scores = scores_ordered[first_mask]
-                cur_proposals = proposals_ordered[first_mask]
+                # cur_scores = scores_ordered[first_mask]
+                # cur_proposals = proposals_ordered[first_mask]
+                cur_scores = ops.masked_select(scores_ordered,first_mask)
+                cur_proposals = ops.masked_select(proposals_ordered,first_mask)
 
                 # fetch top K of first area
                 cur_scores = cur_scores[pre_top_n_list[i - 1]:][:pre_top_n_list[i]]

@@ -8,7 +8,7 @@ sys.path.insert(0, Path(__file__).parent.parent.absolute().__str__())
 # sys.path.insert(0, '../../')
 print(sys.path)
 ms.context.set_context(mode=ms.PYNATIVE_MODE)
-import lib.net.layer_utils as layer_utils
+import lib.utils.layer_utils as layer_utils
 from lib.utils.roipool3d.roipool3d_utils import roipool3d_gpu,pts_in_boxes3d_cpu, roipool_pc_cpu
 from lib.utils.iou3d.iou3d_utils import boxes_iou3d_gpu, boxes_iou_bev, nms_gpu, nms_normal_gpu
 # from lib.net.layer_utils import ThreeNN
