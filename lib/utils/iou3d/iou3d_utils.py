@@ -24,7 +24,7 @@ def boxes_iou_bev(boxes_a, boxes_b):
     ans_iou = ms.numpy.zeros((boxes_a.shape[0], boxes_b.shape[0]))
 
     # iou3d_cuda.boxes_iou_bev_gpu(boxes_a, boxes_b, ans_iou)
-    so_name = "iou3d_cuda.cpython-39-x86_64-linux-gnu.so"
+    # so_name = "iou3d_cuda.cpython-39-x86_64-linux-gnu.so"
     op_boxes_iou_bev_gpu = get_func_from_so(so_name,"boxes_iou_bev_gpu",out_shape=(boxes_a.shape[0], boxes_b.shape[0]),out_dtype=ms.float32)
     ans_iou = op_boxes_iou_bev_gpu(boxes_a, boxes_b)
 
@@ -91,7 +91,7 @@ def nms_gpu(boxes, scores, thresh):
     num_out = num_out.asnumpy().item()
     return order[keep[:num_out]]
 
-nms_normal_gpu_op = get_func_from_so(so_name,"nms_normal_gpu",out_shape=(1,),out_dtype=ms.int32)
+
 def nms_normal_gpu(boxes, scores, thresh):
     """
     :param boxes: (N, 5) [x1, y1, x2, y2, ry]
@@ -99,6 +99,8 @@ def nms_normal_gpu(boxes, scores, thresh):
     :param thresh:
     :return:
     """
+    assert boxes.shape[1] == 5
+    assert boxes.shape[0] == scores.shape[0]
     # areas = (x2 - x1) * (y2 - y1)
     order = ops.Sort(axis=0,descending=True)(scores)[1]
 
@@ -108,7 +110,10 @@ def nms_normal_gpu(boxes, scores, thresh):
     keep = ms.numpy.zeros((boxes.shape[0]), ms.int64)
     # num_out = iou3d_cuda.nms_normal_gpu(boxes, keep, thresh)
     # num_out:ms.Tensor = ms.numpy.zeros((1), ms.int32)
-    
+    thresh = ms.Tensor(thresh,ms.float32)
+    in_type = (boxes.shape,keep.shape,thresh.shape)
+    print(in_type)
+    nms_normal_gpu_op = get_func_from_so(so_name,"nms_normal_gpu",out_shape=(1,),out_dtype=ms.int32,in_type=in_type)
     num_out = nms_normal_gpu_op(boxes, keep, thresh)
     num = num_out.asnumpy().item()
     return order[keep[:num]]

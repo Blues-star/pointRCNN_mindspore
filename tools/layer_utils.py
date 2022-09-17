@@ -18,10 +18,10 @@ def log_to_file(s:str):
 
 op_map = {}
 
-def get_func_from_so(so_name:str,func_name:str,output_n=-1,CPU_opt=False,out_shape=None,out_dtype=None):
+def get_func_from_so(so_name:str,func_name:str,output_n=-1,CPU_opt=False,out_shape=None,out_dtype=None,in_type=None):
     if not func_name.startswith("ms_"):
         func_name = "ms_" + func_name
-    k = hash((func_name,out_shape,out_dtype,CPU_opt,output_n))
+    k = hash((func_name,out_shape,out_dtype,CPU_opt,output_n,in_type))
     if k in op_map.keys():
         return op_map[k]
     print(func_name)

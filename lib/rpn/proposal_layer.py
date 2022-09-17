@@ -71,9 +71,9 @@ class ProposalLayer(nn.Cell):
         :param order: (N)
         """
         nms_range_list = [0, 40.0, 80.0]
-        pre_tot_top_n = cfg[self.mode].RPN_PRE_NMS_TOP_N
+        pre_tot_top_n = cfg[self.mode].RPN_PRE_NMS_TOP_N #9000
         pre_top_n_list = [0, int(pre_tot_top_n * 0.7), pre_tot_top_n - int(pre_tot_top_n * 0.7)]
-        post_tot_top_n = cfg[self.mode].RPN_POST_NMS_TOP_N
+        post_tot_top_n = cfg[self.mode].RPN_POST_NMS_TOP_N # 512
         post_top_n_list = [0, int(post_tot_top_n * 0.7), post_tot_top_n - int(post_tot_top_n * 0.7)]
 
         scores_single_list, proposals_single_list = [], []
@@ -89,14 +89,14 @@ class ProposalLayer(nn.Cell):
             # get proposal distance mask
             # dist_mask:ms.Tensor = ((dist > nms_range_list[i - 1]) & (dist <= nms_range_list[i]))
             
-            dist_mask = ops.logical_and((dist > nms_range_list[i - 1]), (dist <= nms_range_list[i]))
-            if dist_mask.sum() != 0:
+            dist_mask:ms.Tensor = ops.logical_and((dist > nms_range_list[i - 1]), (dist <= nms_range_list[i]))
+            if dist_mask.sum() != 0: #True
                 # this area has points
                 # reduce by mask
                 # cur_scores = scores_ordered[dist_mask]
                 # cur_proposals = proposals_ordered[dist_mask]
                 cur_scores = ops.masked_select(scores_ordered,dist_mask)
-                cur_proposals = ops.masked_select(proposals_ordered,dist_mask)
+                cur_proposals = ops.masked_select(proposals_ordered,dist_mask.expand_dims(-1)).reshape((-1,7))
 
                 # fetch pre nms top K
                 cur_scores = cur_scores[:pre_top_n_list[i]]
@@ -107,7 +107,7 @@ class ProposalLayer(nn.Cell):
                 # cur_scores = scores_ordered[first_mask]
                 # cur_proposals = proposals_ordered[first_mask]
                 cur_scores = ops.masked_select(scores_ordered,first_mask)
-                cur_proposals = ops.masked_select(proposals_ordered,first_mask)
+                cur_proposals = ops.masked_select(proposals_ordered,first_mask.expand_dims(-1)).reshape((-1,7))
 
                 # fetch top K of first area
                 cur_scores = cur_scores[pre_top_n_list[i - 1]:][:pre_top_n_list[i]]
@@ -115,9 +115,9 @@ class ProposalLayer(nn.Cell):
 
             # oriented nms
             boxes_bev = kitti_utils.boxes3d_to_bev_torch(cur_proposals)
-            if cfg.RPN.NMS_TYPE == 'rotate':
+            if cfg.RPN.NMS_TYPE == 'rotate': #False
                 keep_idx = iou3d_utils.nms_gpu(boxes_bev, cur_scores, cfg[self.mode].RPN_NMS_THRESH)
-            elif cfg.RPN.NMS_TYPE == 'normal':
+            elif cfg.RPN.NMS_TYPE == 'normal': #True
                 keep_idx = iou3d_utils.nms_normal_gpu(boxes_bev, cur_scores, cfg[self.mode].RPN_NMS_THRESH)
             else:
                 raise NotImplementedError

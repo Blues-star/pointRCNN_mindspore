@@ -61,7 +61,8 @@ void ball_query_kernel_launcher_fast(int b, int n, int m, float radius, int nsam
     // cudaDeviceSynchronize();  // for using printf in kernel function
     err = cudaGetLastError();
     if (cudaSuccess != err) {
-        fprintf(stderr, "CUDA kernel failed : %s\n", cudaGetErrorString(err));
+        fprintf(stderr, "CUDA kernel failed : %s \n", cudaGetErrorString(err));
+        fprintf(stderr, "Block: %u %u %u , threads: %u %u %u \n", blocks.x,blocks.y,blocks.z,threads.x,threads.y,threads.z);
         exit(-1);
     }
 }

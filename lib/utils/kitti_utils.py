@@ -143,6 +143,7 @@ def boxes3d_to_bev_torch(boxes3d):
     :return:
         boxes_bev: (N, 5) [x1, y1, x2, y2, ry]
     """
+    assert boxes3d.shape[1] == 7
     # boxes_bev = boxes3d.new(torch.Size((boxes3d.shape[0], 5)))
     boxes_bev = ms.numpy.zeros((boxes3d.shape[0], 5))
 

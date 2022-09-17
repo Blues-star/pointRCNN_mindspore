@@ -38,7 +38,8 @@ void gather_points_kernel_launcher_fast(int b, int c, int n, int npoints,
 
     err = cudaGetLastError();
     if (cudaSuccess != err) {
-        fprintf(stderr, "CUDA kernel failed : %s %u\n", cudaGetErrorString(err),err);
+        fprintf(stderr, "CUDA kernel failed : %s \n", cudaGetErrorString(err));
+        fprintf(stderr, "Block: %u %u %u , threads: %u %u %u \n", blocks.x,blocks.y,blocks.z,threads.x,threads.y,threads.z);
         exit(-1);
     }
 }
@@ -77,7 +78,8 @@ void gather_points_grad_kernel_launcher_fast(int b, int c, int n, int npoints,
 
     err = cudaGetLastError();
     if (cudaSuccess != err) {
-        fprintf(stderr, "CUDA kernel failed : %s %u\n", cudaGetErrorString(err),err);
+        fprintf(stderr, "CUDA kernel failed : %s \n", cudaGetErrorString(err));
+        fprintf(stderr, "Block: %u %u %u , threads: %u %u %u \n", blocks.x,blocks.y,blocks.z,threads.x,threads.y,threads.z);
         exit(-1);
     }
 }
@@ -247,7 +249,8 @@ void furthest_point_sampling_kernel_launcher(int b, int n, int m,
 
     err = cudaGetLastError();
     if (cudaSuccess != err) {
-        fprintf(stderr, "CUDA kernel failed : %s %u\n", cudaGetErrorString(err),err);
+        fprintf(stderr, "CUDA kernel failed : %s \n", cudaGetErrorString(err));
+        // fprintf(stderr, "Block: %u %u %u , threads: %u %u %u \n", blocks.x,blocks.y,blocks.z,threads.x,threads.y,threads.z);
         exit(-1);
     }
 }
