@@ -53,7 +53,7 @@ void ball_query_kernel_launcher_fast(int b, int n, int m, float radius, int nsam
     //      idx: (B, M, nsample)
 
     cudaError_t err;
-
+    fprintf(stderr, "b,n,m,r,nsample %d %d %d %f %d \n", b, n, m, radius, nsample);
     dim3 blocks(DIVUP(m, THREADS_PER_BLOCK), b);  // blockIdx.x(col), blockIdx.y(row)
     dim3 threads(THREADS_PER_BLOCK);
 

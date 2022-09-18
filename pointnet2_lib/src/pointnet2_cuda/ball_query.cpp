@@ -33,9 +33,9 @@ extern "C" int ms_ball_query_wrapper_fast(int nparam, void **params, int *ndims,
     auto b = tensors[0].item<int>();
     auto n = tensors[1].item<int>();
     auto m = tensors[2].item<int>();
-    auto radius = tensors[3].item<int>();
+    auto radius = tensors[3].item<float>();
     auto nsample = tensors[4].item<int>();
-
+    fprintf(stderr, "b,n,m,r,nsample %d %d %d %f %d \n", b, n, m, radius, nsample);
     ball_query_wrapper_fast(b,n,m,radius,nsample,tensors[5],tensors[6],tensors[7]);
     return 0;
 }
