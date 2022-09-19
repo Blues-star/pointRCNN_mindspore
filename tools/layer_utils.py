@@ -554,7 +554,7 @@ class GroupAll(nn.Cell):
         :return:
             new_features: (B, C + 3, 1, N)
         """
-        grouped_xyz = xyz.swapaxes(1, 2)
+        grouped_xyz = xyz.swapaxes(1, 2).expand_dims(2)
         if features is not None:
 
             grouped_features = ops.expand_dims(features, 2)

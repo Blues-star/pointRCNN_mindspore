@@ -59,7 +59,7 @@ class PointRCNN(nn.Cell):
                 if self.training:
                     rcnn_input_info['gt_boxes3d'] = input_data['gt_boxes3d']
 
-                rcnn_output = self.rcnn_net(rcnn_input_info)
+                rcnn_output = self.rcnn_net(**rcnn_input_info)
                 output.update(rcnn_output)
 
         elif cfg.RCNN.ENABLED:

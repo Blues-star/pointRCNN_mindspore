@@ -130,22 +130,22 @@ class RCNNNet(nn.Cell):
         # Tensor.transpose()
         features = (
             pc[..., 3:].swapaxes(1, 2)
-            if pc.size(-1) > 3 else None
+            if pc.shape[-1] > 3 else None
         )
 
         return xyz, features
 
-    def construct(self,*args, **input_data):
+    def construct(self,**input_data):
         """
         :param input_data: input dict
         :return:
         """
-        print(len(args))
+        # print(len(args))
         if cfg.RCNN.ROI_SAMPLE_JIT:
             # True
             if self.training:
                 # with torch.no_grad():
-                target_dict = self.proposal_target_layer(input_data)
+                target_dict = self.proposal_target_layer(**input_data)
 
                 pts_input = ops.concat((target_dict['sampled_pts'], target_dict['pts_feature']), axis=2)
                 target_dict['pts_input'] = pts_input

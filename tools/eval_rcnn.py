@@ -292,7 +292,7 @@ def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
             for key, val in input_data.items():
                 if key in ['gt_iou', 'gt_boxes3d']:
                     continue
-                input_data[key] = input_data[key].unsqueeze(dim=0)
+                input_data[key] = input_data[key].expand_dims(axis=0)
         else:
             pts_input = torch.cat((input_data['pts_input'], input_data['pts_features']), dim=-1)
             input_data['pts_input'] = pts_input

@@ -22,10 +22,11 @@ class ProposalTargetLayer(nn.Cell):
 
         rpn_xyz, rpn_features = input_dict['rpn_xyz'], input_dict['rpn_features']
         if cfg.RCNN.USE_INTENSITY:
-            pts_extra_input_list = [input_dict['rpn_intensity'].unsqueeze(axis=2),
-                                    input_dict['seg_mask'].unsqueeze(axis=2)]
+            # ms.Tensor.expand_dims()
+            pts_extra_input_list = [input_dict['rpn_intensity'].expand_dims(axis=2),
+                                    input_dict['seg_mask'].expand_dims(axis=2)]
         else:
-            pts_extra_input_list = [input_dict['seg_mask'].unsqueeze(axis=2)]
+            pts_extra_input_list = [input_dict['seg_mask'].expand_dims(axis=2)]
 
         if cfg.RCNN.USE_DEPTH:
             pts_depth:ms.Tensor = input_dict['pts_depth'] / 70.0 - 0.5
@@ -62,11 +63,13 @@ class ProposalTargetLayer(nn.Cell):
 
         # regression valid mask
         valid_mask = (pooled_empty_flag == 0)
-        reg_valid_mask = ((batch_roi_iou > cfg.RCNN.REG_FG_THRESH) & valid_mask).long()
+        
+        reg_valid_mask = (ops.logical_and((batch_roi_iou > cfg.RCNN.REG_FG_THRESH),valid_mask)).astype(ms.int32)
 
         # classification label
-        batch_cls_label = (batch_roi_iou > cfg.RCNN.CLS_FG_THRESH).long()
-        invalid_mask = (batch_roi_iou > cfg.RCNN.CLS_BG_THRESH) & (batch_roi_iou < cfg.RCNN.CLS_FG_THRESH)
+        batch_cls_label = (batch_roi_iou > cfg.RCNN.CLS_FG_THRESH).astype(ms.int32)
+        
+        invalid_mask = ops.logical_and((batch_roi_iou > cfg.RCNN.CLS_BG_THRESH) , (batch_roi_iou < cfg.RCNN.CLS_FG_THRESH))
         batch_cls_label[valid_mask == 0] = -1
         batch_cls_label[invalid_mask > 0] = -1
 
@@ -111,27 +114,29 @@ class ProposalTargetLayer(nn.Cell):
             # include gt boxes in the candidate rois
             iou3d = iou3d_utils.boxes_iou3d_gpu(cur_roi, cur_gt[:, 0:7])  # (M, N)
 
-            max_overlaps, gt_assignment = ops.ArgMaxWithValue(1)(iou3d)
+            gt_assignment, max_overlaps = ops.ArgMaxWithValue(1)(iou3d)
 
             # sample fg, easy_bg, hard_bg
             fg_thresh = min(cfg.RCNN.REG_FG_THRESH, cfg.RCNN.CLS_FG_THRESH)
-            fg_inds:ms.Tensor = ops.nonzero((max_overlaps >= fg_thresh)).view(-1)
+            temp = max_overlaps >= fg_thresh
+            # print(ops.nonzero(temp).shape)
+            fg_inds:ms.Tensor = ops.nonzero(temp).view(-1)
             # fg_inds = torch.nonzero((max_overlaps >= fg_thresh)).view(-1)
 
             # TODO: this will mix the fg and bg when CLS_BG_THRESH_LO < iou < CLS_BG_THRESH
             # fg_inds = torch.cat((fg_inds, roi_assignment), axis=0)  # consider the roi which has max_iou with gt as fg
 
             easy_bg_inds = ops.nonzero((max_overlaps < cfg.RCNN.CLS_BG_THRESH_LO)).view(-1)
-            hard_bg_inds = ops.nonzero((max_overlaps < cfg.RCNN.CLS_BG_THRESH) &
-                                         (max_overlaps >= cfg.RCNN.CLS_BG_THRESH_LO)).view(-1)
+            
+            hard_bg_inds = ops.nonzero(ops.logical_and((max_overlaps < cfg.RCNN.CLS_BG_THRESH),(max_overlaps >= cfg.RCNN.CLS_BG_THRESH_LO))).view(-1)
 
-            fg_num_rois = ops.size(fg_inds) 
-            bg_num_rois = hard_bg_inds.numel() + easy_bg_inds.numel()
+            fg_num_rois = fg_inds.size # fg_inds) 
+            bg_num_rois = hard_bg_inds.size + easy_bg_inds.size
 
             if fg_num_rois > 0 and bg_num_rois > 0:
                 # sampling fg
                 fg_rois_per_this_image = min(fg_rois_per_image, fg_num_rois)
-                rand_num = ms.Tensor.from_numpy(np.random.permutation(fg_num_rois)).astype(gt_boxes3d.dtype)
+                rand_num = ms.Tensor.from_numpy(np.random.permutation(fg_num_rois)).astype(ms.int32)
                 # rand_num = ms.ops.cast(rand_num, ms.float32)
                 # 有可能类型不对
                 # rand_num = ms.Tensor.from_numpy(numpy.random.permutation(fg_num_rois)).type_as(gt_boxes3d).long()
@@ -196,13 +201,14 @@ class ProposalTargetLayer(nn.Cell):
 
     def sample_bg_inds(self, hard_bg_inds, easy_bg_inds, bg_rois_per_this_image):
         # if hard_bg_inds.numel() > 0 and easy_bg_inds.numel() > 0:
-        if ops.size(hard_bg_inds) > 0 and ops.size(easy_bg_inds) > 0:
+        randint = ops.UniformInt()
+        if hard_bg_inds.size > 0 and easy_bg_inds.size > 0:
             hard_bg_rois_num = int(bg_rois_per_this_image * cfg.RCNN.HARD_BG_RATIO)
             easy_bg_rois_num = bg_rois_per_this_image - hard_bg_rois_num
-            randint = ops.UniformInt()
+            
             # sampling hard bg
             minval = ms.Tensor(0, ms.int32)
-            maxval = ops.size(hard_bg_inds)
+            maxval = ms.Tensor(hard_bg_inds.size, ms.int32)
             shape = (hard_bg_rois_num,)
             rand_idx = randint(shape,minval,maxval)
             # rand_idx = randint(low=0, high=hard_bg_inds.numel(), size=(hard_bg_rois_num,)).long()
@@ -210,7 +216,7 @@ class ProposalTargetLayer(nn.Cell):
 
             # sampling easy bg
             minval = ms.Tensor(0, ms.int32)
-            maxval = ops.size(easy_bg_inds)
+            maxval = ms.Tensor(easy_bg_inds.size, ms.int32)
             shape = (easy_bg_rois_num,)
             rand_idx = randint(shape,minval,maxval)
             # rand_idx = torch.randint(low=0, high=easy_bg_inds.numel(), size=(easy_bg_rois_num,)).long()
@@ -219,21 +225,21 @@ class ProposalTargetLayer(nn.Cell):
             bg_inds = ops.concat([hard_bg_inds, easy_bg_inds], 0)
         # elif hard_bg_inds.numel() > 0 and easy_bg_inds.numel() == 0:
         
-        elif ops.size(hard_bg_inds) > 0 and ops.size(easy_bg_inds) == 0:
+        elif hard_bg_inds.size > 0 and easy_bg_inds.size == 0:
             hard_bg_rois_num = bg_rois_per_this_image
             # sampling hard bg
             minval = ms.Tensor(0, ms.int32)
-            maxval = ops.size(hard_bg_inds)
+            maxval = ms.Tensor(hard_bg_inds.size, ms.int32)
             shape = (hard_bg_rois_num,)
             rand_idx = randint(shape,minval,maxval)
             # rand_idx = torch.randint(low=0, high=hard_bg_inds.numel(), size=(hard_bg_rois_num,)).long()
             bg_inds = hard_bg_inds[rand_idx]
         #elif hard_bg_inds.numel() == 0 and easy_bg_inds.numel() > 0:
-        elif ops.size(hard_bg_inds) == 0 and ops.size(easy_bg_inds) > 0:
+        elif hard_bg_inds.size == 0 and easy_bg_inds.size > 0:
             easy_bg_rois_num = bg_rois_per_this_image
             # sampling easy bg
             minval = ms.Tensor(0, ms.int32)
-            maxval = ops.size(easy_bg_inds)
+            maxval = ms.Tensor(easy_bg_inds.size, ms.int32)
             shape = (easy_bg_rois_num,)
             rand_idx = randint(shape,minval,maxval)
             # rand_idx = torch.randint(low=0, high=easy_bg_inds.numel(), size=(easy_bg_rois_num,)).long()
@@ -300,9 +306,9 @@ class ProposalTargetLayer(nn.Cell):
             # idx = torch.randint(low=0, high=len(range_config), size=(1,))[0].long()
             idx = randint(shape,minval,maxval)
             rand = ops.UniformReal()
-            pos_shift = ((rand(3) - 0.5) / 0.5) * range_config[idx][0]
-            hwl_scale = ((rand(3) - 0.5) / 0.5) * range_config[idx][1] + 1.0
-            angle_rot = ((rand(1) - 0.5) / 0.5) * range_config[idx][2]
+            pos_shift = ((rand((3,)) - 0.5) / 0.5) * range_config[idx][0]
+            hwl_scale = ((rand((3,)) - 0.5) / 0.5) * range_config[idx][1] + 1.0
+            angle_rot = ((rand((1,)) - 0.5) / 0.5) * range_config[idx][2]
 
             aug_box3d = ops.concat([box3d[0:3] + pos_shift, box3d[3:6] * hwl_scale, box3d[6:7] + angle_rot], axis=0)
             return aug_box3d
@@ -339,7 +345,7 @@ class ProposalTargetLayer(nn.Cell):
         # calculate gt alpha from gt_of_rois
         temp_x, temp_z, temp_ry = gt_of_rois[:, :, 0], gt_of_rois[:, :, 2], gt_of_rois[:, :, 6]
         # ms.numpy.arctan2()
-        ops.Sign()()
+        # ops.Sign()()
         temp_beta = ops.atan2(temp_z, temp_x)
         gt_alpha = -ops.Sign()(temp_beta) * np.pi / 2 + temp_beta + temp_ry  # (B, M)
 

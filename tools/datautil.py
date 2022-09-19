@@ -183,7 +183,7 @@ def create_dataloader_debug(logger):
     print(cols)
     train_loader = ms.dataset.GeneratorDataset(train_set,num_parallel_workers=1,column_names=cols,shuffle=True)
     # train_loader.set_dynamic_columns(columns=colums) 
-    train_batch_loader = train_loader.batch(2,drop_remainder=True,num_parallel_workers=4,per_batch_map=batchpad(cols=cols),python_multiprocessing=False)
+    train_batch_loader = train_loader.batch(8,drop_remainder=True,num_parallel_workers=4,per_batch_map=batchpad(cols=cols),python_multiprocessing=False)
     # train_batch_loader = train_loader.batch(1,drop_remainder=True,num_parallel_workers=4,python_multiprocessing=True)
 
 

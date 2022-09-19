@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pickle
 import torch
+import mindspore as ms
 
 import lib.utils.kitti_utils as kitti_utils
 import lib.utils.roipool3d.roipool3d_utils as roipool3d_utils
@@ -195,8 +196,8 @@ class AugSceneGenerator(KittiDataset):
 
             cnt += 1
 
-            iou3d = iou3d_utils.boxes_iou3d_gpu(torch.from_numpy(new_gt_box3d.reshape(1, 7)).cuda(),
-                                                torch.from_numpy(cur_gt_boxes3d).cuda()).cpu().numpy()
+            iou3d = iou3d_utils.boxes_iou3d_gpu(ms.Tensor.from_numpy(new_gt_box3d.reshape(1, 7)),
+                                                ms.Tensor.from_numpy(cur_gt_boxes3d)).asnumpy()
 
             valid_flag = iou3d.max() < 1e-8
             if not valid_flag:
@@ -204,8 +205,8 @@ class AugSceneGenerator(KittiDataset):
 
             enlarged_box3d = new_gt_box3d.copy()
             enlarged_box3d[3] += 2  # remove the points above and below the object
-            boxes_pts_mask_list = roipool3d_utils.pts_in_boxes3d_cpu(torch.from_numpy(pts_rect),
-                                                                     torch.from_numpy(enlarged_box3d.reshape(1, 7)))
+            boxes_pts_mask_list = roipool3d_utils.pts_in_boxes3d_cpu(ms.Tensor.from_numpy(pts_rect),
+                                                                     ms.Tensor.from_numpy(enlarged_box3d.reshape(1, 7)))
             pt_mask_flag = (boxes_pts_mask_list[0].numpy() == 1)
             src_pts_flag[pt_mask_flag] = 0  # remove the original points which are inside the new box
 

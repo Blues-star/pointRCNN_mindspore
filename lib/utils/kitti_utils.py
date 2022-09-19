@@ -78,6 +78,7 @@ def boxes3d_to_corners3d(boxes3d, rotate=True):
     z_corners = np.array([w / 2., -w / 2., -w / 2., w / 2., w / 2., -w / 2., -w / 2., w / 2.], dtype=np.float32).T  # (N, 8)
 
     y_corners = np.zeros((boxes_num, 8), dtype=np.float32)
+    assert boxes_num > 0
     y_corners[:, 4:8] = -h.reshape(boxes_num, 1).repeat(4, axis=1)  # (N, 8)
 
     if rotate:
