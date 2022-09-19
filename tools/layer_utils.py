@@ -288,7 +288,13 @@ class GatherOperation(nn.Cell):
                               out_shape=(B, C, npoint),
                               out_dtype=ms.float32)
         # pointnet2.gather_points_wrapper(B, C, N, npoint, features, idx, output)
-        output = op(B, C, N, npoint, features, idx)
+        _B = Tensor(B,ms.dtype.int32)
+        _C = Tensor(C,ms.dtype.int32)
+        _N = Tensor(N,ms.dtype.int32)
+        _npoint = Tensor(npoint,ms.dtype.int32)
+        print(_B, _C, _N, _npoint)
+        # output = op(B, C, N, npoint, features, idx)
+        output = op(_B, _C, _N, _npoint, features, idx)
         # ctx.for_backwards = (idx, C, N)
         return output
 
@@ -310,6 +316,7 @@ class GroupingOperation(nn.Cell):
         """
 
         _, C, N = features.shape
+        # print(features.shape)
         B, npoint, nsample = idx.shape
         # ms.Tensor(shape=(B, C, nfeatures, nsample),dtype=ms.float32)
         # output = ms.numpy.zeros((B, C, nfeatures, nsample))
@@ -320,18 +327,20 @@ class GroupingOperation(nn.Cell):
         log_to_file("GroupingOperation")
         log_to_file((B, C, npoint, nsample))
         op = get_func_from_so(so_name=self.so_name,
+        # CPU_opt=True,
                               func_name=self.func_name,
                               out_shape=(B, C, npoint, nsample),
                               out_dtype=ms.float32)
-        _features = ms.numpy.rand((B, C, N))  #features.copy()
-        _idx = ms.numpy.randint(1, 64, (B, npoint, nsample))  #idx.copy()
+        # _features = ms.numpy.rand((B, C, N))  #features.copy()
+        # _idx = ms.numpy.randint(1, 64, (B, npoint, nsample))  #idx.copy()
         _B = ms.Tensor(B,ms.int32)
-        _C = ms.Tensor(N,ms.int32)
+        _C = ms.Tensor(C,ms.int32)
         _N = ms.Tensor(N,ms.int32)
         _npoint = ms.Tensor(npoint,ms.int32)
         _nsample = ms.Tensor(nsample,ms.int32)
         # output = op(B, C, N, npoint, nsample, _features, _idx)
-        output = op(_B, _C, _N, _npoint, _nsample, _features, _idx)
+        print(_B, _C, _N, _npoint, _nsample)
+        output = op(_B, _C, _N, _npoint, _nsample, features, idx)
         # ctx.for_backwards = (idx, N)
         return output
 
@@ -369,12 +378,13 @@ class BallQuery(nn.Cell):
                                               out_shape=(B, npoint, nsample),
                                               out_dtype=ms.int32)
         assert B > 0 and N > 0 and npoint > 0 and radius > 0 and nsample > 0
-        print(radius)
-        _B = ms.Tensor(B,ms.int32)
-        _N = ms.Tensor(N,ms.int32)
-        _npoint = ms.Tensor(npoint,ms.int32)
-        _radius = ms.Tensor(radius,ms.float32)
-        _nsample = ms.Tensor(nsample,ms.int32)
+        print(B,N,npoint,radius,nsample)
+        _B = ms.Tensor(B, ms.dtype.int32)
+        _N = ms.Tensor(N, ms.dtype.int32)
+        _npoint = ms.Tensor(npoint, ms.dtype.int32)
+        _radius = ms.Tensor(radius, ms.dtype.float32)
+        _nsample = ms.Tensor(nsample, ms.dtype.int32)
+        print(_B, _N, _npoint, _radius, _nsample)
         idx = ball_query_wrapper(_B, _N, _npoint, _radius, _nsample, _new_xyz, xyz)
         return idx
 
@@ -453,7 +463,10 @@ class FurthestPointSampling(nn.Cell):
             "furthest_point_sampling_wrapper",
             out_shape=(B, npoint),
             out_dtype=ms.int32)
-        output = furthest_point_sampling_wrapper(B, N, npoint, xyz, temp)
+        _B = ms.Tensor(B,ms.int32)
+        _N = ms.Tensor(N,ms.int32)
+        _npoint = ms.Tensor(npoint,ms.int32)
+        output = furthest_point_sampling_wrapper(_B, _N, _npoint, xyz, temp)
         return output
 
 
@@ -671,7 +684,10 @@ class ThreeNN(nn.Cell):
         # B,N,m = Tensor(B),Tensor(N),Tensor(m)
         # self.three_nn_wrapper(B, N, m, unknown, known, dist2, idx)
         print((B, N, m))
-        dist2, idx = three_nn_wrapper(B, N, m, unknown, known)
+        _B = ms.Tensor(B,ms.int32)
+        _N = ms.Tensor(N,ms.int32)
+        _m = ms.Tensor(m,ms.int32)
+        dist2, idx = three_nn_wrapper(_B, _N, _m, unknown, known)
         return ops.sqrt(dist2), idx
 
 
@@ -709,7 +725,11 @@ class ThreeInterpolate(nn.Cell):
             "three_interpolate_wrapper_fast",
             out_shape=(B, c, n),
             out_dtype=ms.float32)
-        output = three_interpolate_wrapper(B, c, m, n, features, idx, weight)
+        _B = ms.Tensor(B,ms.int32)
+        _c = ms.Tensor(c,ms.int32)
+        _m = ms.Tensor(m,ms.int32)
+        _n = ms.Tensor(n,ms.int32)
+        output = three_interpolate_wrapper(_B, _c, _m, _n, features, idx, weight)
         return output
 
 

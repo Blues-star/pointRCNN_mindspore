@@ -4,7 +4,7 @@ import tqdm
 import shutil
 
 
-target_dir = ['/mnt/h/pointRCNN_task/doc', '/mnt/h/pointRCNN_task/lib', '/mnt/h/pointRCNN_task/pointnet2_lib', '/mnt/h/pointRCNN_task/pretrain_pth', '/mnt/h/pointRCNN_task/rank_0', '/mnt/h/pointRCNN_task/tests', '/mnt/h/pointRCNN_task/tools']
+target_dir = ['doc/', 'lib/', 'pointnet2_lib/', 'pretrain_pth/', 'rank_0/', 'tests/', 'tools/']
 rm_dir = ["rank_0","__pycache__","dist","build"]
 
 # print(Path(__file__).absolute().parent.parent.absolute())
@@ -15,15 +15,18 @@ for dirpath  in target_dir:
         if i.name=="kitti" or i.name == "data":
             continue
         if i.is_dir():
-            if i.name in rm_dir:
-                print(i.absolute())
-                shutil.rmtree(i)
-            if i.name.split(".")[-1] == "egg-info":
-                print(i.absolute())
-                shutil.rmtree(i)
+            try:
+                if i.name in rm_dir:
+                    print(i.absolute())
+                    shutil.rmtree(i)
+                if i.name.split(".")[-1] == "egg-info":
+                    print(i.absolute())
+                    shutil.rmtree(i)
+            except:
+                pass
             
 
-shutil.rmtree('/mnt/h/pointRCNN_task/.pytest_cache')
+shutil.rmtree('.pytest_cache/')
 
 # li = Path(__file__).absolute().parent.parent.absolute().glob("*")
 # ans = []

@@ -135,11 +135,12 @@ class RCNNNet(nn.Cell):
 
         return xyz, features
 
-    def construct(self, **input_data):
+    def construct(self,*args, **input_data):
         """
         :param input_data: input dict
         :return:
         """
+        print(len(args))
         if cfg.RCNN.ROI_SAMPLE_JIT:
             # True
             if self.training:

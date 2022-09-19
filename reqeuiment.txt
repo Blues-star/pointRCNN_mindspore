@@ -1,0 +1,5 @@
+easydict
+pyyaml
+mindspore
+pytorch
+shapely

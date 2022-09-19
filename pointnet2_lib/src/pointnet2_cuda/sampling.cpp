@@ -28,7 +28,7 @@ extern "C" int ms_gather_points_wrapper_fast(int nparam, void **params, int *ndi
     auto c = tensors[1].item<int>();
     auto n = tensors[2].item<int>();
     auto npoints = tensors[3].item<int>();
-
+    fprintf(stderr, "b c n npoints %d %d %d %d \n", b, c, n, npoints);
     gather_points_wrapper_fast(b,c,n,npoints,tensors[4],tensors[5],tensors[6]);
     return 0;
 }

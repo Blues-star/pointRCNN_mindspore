@@ -133,8 +133,8 @@ class ProposalLayer(nn.Cell):
             scores_single_list.append(cur_scores[keep_idx])
             proposals_single_list.append(cur_proposals[keep_idx])
         cat = ops.Concat(axis=0)
-        scores_single = cat(scores_single_list, dim=0)
-        proposals_single = cat(proposals_single_list, dim=0)
+        scores_single = cat(scores_single_list)
+        proposals_single = cat(proposals_single_list)
         return scores_single, proposals_single
 
     def score_based_proposal(self, scores, proposals, order):
