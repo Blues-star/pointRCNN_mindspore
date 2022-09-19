@@ -14,7 +14,7 @@ from lib.config import cfg, cfg_from_file, save_config_to_file
 from mindspore import context
 from lib.net.point_rcnn import PointRCNN
 from tools.datautil import create_dataloader, create_dataloader_debug
-
+from lib.net.ms_loss import net_with_loss
 
 ms.context.set_context(device_target="GPU")
 ms.context.set_context(mode=ms.PYNATIVE_MODE,pynative_synchronize=True)
@@ -22,7 +22,7 @@ logger = logging.getLogger("net")
 # train_loader, test_loader,num_class = create_dataloader_debug(logger=logger)
 # total_step = train_loader.get_dataset_size() * 200
 
-train_mode = 'rcnn'
+train_mode = 'rpn'
 cfg_file = "tools/cfgs/default.yaml"
 
 
@@ -56,9 +56,12 @@ if cfg_file is not None:
 # }
 data,_,num_class = create_dataloader_debug(logger)
 data_batch = data.create_dict_iterator().__next__()
+print(data_batch.keys())
 
 net = PointRCNN(num_classes=num_class,
                     use_xyz=True,
                     mode='TRAIN')
-net(data_batch)
+model = net_with_loss(net)
+ans = model(**data_batch)
+print(f"loss: {ans}")
 print("test passed!")

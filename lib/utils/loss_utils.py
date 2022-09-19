@@ -130,15 +130,21 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
     # x_bin_label = (x_shift / loc_bin_size).floor().long()
     # z_bin_label = (z_shift / loc_bin_size).floor().long()
     # @Warning!
-    x_bin_label:ms.Tensor = mF.floor(x_shift / loc_bin_size).astype(ms.int64)
-    z_bin_label:ms.Tensor = mF.floor(z_shift / loc_bin_size).astype(ms.int64)
+    x_bin_label:ms.Tensor = mF.floor(x_shift / loc_bin_size).astype(ms.int32) # [N,]
+    z_bin_label:ms.Tensor = mF.floor(z_shift / loc_bin_size).astype(ms.int32) # [N,]
 
     x_bin_l, x_bin_r = 0, per_loc_bin_num
     z_bin_l, z_bin_r = per_loc_bin_num, per_loc_bin_num * 2
     start_offset = z_bin_r
-    cross_entropy = mnn.SoftmaxCrossEntropyWithLogits()
-    loss_x_bin:ms.Tensor = cross_entropy(pred_reg[:, x_bin_l: x_bin_r], x_bin_label)
-    loss_z_bin:ms.Tensor = cross_entropy(pred_reg[:, z_bin_l: z_bin_r], z_bin_label)
+    cross_entropy = mnn.SoftmaxCrossEntropyWithLogits(True,'mean')
+    
+    t1 = pred_reg[:, x_bin_l: x_bin_r].copy().astype(ms.float32) #[N 12]
+    # t1.shape = t1.shape
+    t2 = pred_reg[:, z_bin_l: z_bin_r].copy().astype(ms.float32) #[N 12]
+    # t2.shape = t2.shape
+    # assert ops.Shape()(t1)[-1] > 0 # ops.Shape()(t1) == (-1, -1)
+    loss_x_bin = cross_entropy(t1, x_bin_label)
+    loss_z_bin = cross_entropy(t2, z_bin_label)
     reg_loss_dict['loss_x_bin'] = loss_x_bin.asnumpy()
     reg_loss_dict['loss_z_bin'] = loss_z_bin.asnumpy()
     loc_loss += loss_x_bin + loss_z_bin

@@ -10,7 +10,7 @@ import importlib
 import sys
 print(sys.path)
 import mindspore as ms
-from mindspore import nn
+from mindspore import nn,ops
 from mindspore import numpy as np
 
 
@@ -60,7 +60,7 @@ class RPN(nn.Cell):
                                                                                gamma=cfg.RPN.FOCAL_GAMMA)
         elif cfg.RPN.LOSS_CLS == 'BinaryCrossEntropy':
             
-            self.rpn_cls_loss_func = ms.ops.BinaryCrossEntropy()
+            self.rpn_cls_loss_func = ops.BinaryCrossEntropy()
         else:
             raise NotImplementedError
 
