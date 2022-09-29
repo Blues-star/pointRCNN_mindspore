@@ -122,8 +122,9 @@ def get_cols(mode="TRAIN"):
 def create_dataloader(logger,args):
     #DATA_PATH = os.path.join('../', 'data')
     DATA_PATH = (Path(__file__).parent.parent.absolute()/'data').absolute()
-    cols = get_cols("TRAIN")
+    # cols = get_cols("TRAIN")
     # create dataloader
+    
     train_set = KittiRCNNDataset(root_dir=DATA_PATH, npoints=cfg.RPN.NUM_POINTS, split=cfg.TRAIN.SPLIT, mode='TRAIN',
                                  logger=logger,
                                  classes=cfg.CLASSES,
@@ -132,13 +133,14 @@ def create_dataloader(logger,args):
                                  gt_database_dir=args.gt_database)
 
     num_class = train_set.num_class
+    cols = train_set.getitem_cols(0)
     # train_loader = DataLoader(train_set, batch_size=args.batch_size, pin_memory=True,
     #                           num_workers=args.workers, shuffle=True, collate_fn=train_set.collate_batch,
     #                           drop_last=True)
     # cols = ["sample_id","pts_input","pts_rect","pts_features","rpn_cls_label","rpn_reg_label","gt_boxes3d"]
     train_loader = ms.dataset.GeneratorDataset(train_set,num_parallel_workers=1,column_names=cols,shuffle=True)
     # train_loader.set_dynamic_columns(columns=colums) 
-    train_batch_loader = train_loader.batch(16,drop_remainder=True,num_parallel_workers=4,per_batch_map=batchpad(cols=cols),python_multiprocessing=True)
+    train_batch_loader = train_loader.batch(args.batch_size,drop_remainder=True,num_parallel_workers=4,per_batch_map=batchpad(cols=cols),python_multiprocessing=True)
 
     if args.train_with_eval:
         test_set = KittiRCNNDataset(root_dir=DATA_PATH, npoints=cfg.RPN.NUM_POINTS, split=cfg.TRAIN.VAL_SPLIT, mode='EVAL',

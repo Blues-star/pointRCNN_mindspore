@@ -20,9 +20,15 @@ from lib.net.point_rcnn import PointRCNN
 import lib.net.train_functions as train_functions
 from lib.datasets.kitti_rcnn_dataset import KittiRCNNDataset
 from lib.config import cfg, cfg_from_file, save_config_to_file
-import tools.train_utils.train_utils as train_utils
+# import tools.train_utils.train_utils as train_utils
 from tools.train_utils.fastai_optim import OptimWrapper
-from tools.train_utils import learning_schedules_fastai as lsf
+# from tools.train_utils import learning_schedules_fastai as lsf
+from lib.net.ms_loss import net_with_loss
+
+from mindspore import context,Callback
+from mindspore.train.callback import ModelCheckpoint, CheckpointConfig, LossMonitor, TimeMonitor
+ms.context.set_context(device_target="GPU")
+ms.context.set_context(mode=ms.PYNATIVE_MODE,pynative_synchronize=True)
 
 parser = argparse.ArgumentParser(description="arg parser")
 parser.add_argument('--cfg_file',
@@ -125,11 +131,11 @@ def create_logger(log_file):
 def create_optimizer(model: nn.Cell):
 
     if cfg.TRAIN.OPTIMIZER == 'adam':
-        optimizer = nn.Adam(model.parameters(),
+        optimizer = nn.Adam(model.trainable_params(),
                             learning_rate=cfg.TRAIN.LR,
                             weight_decay=cfg.TRAIN.WEIGHT_DECAY)
     elif cfg.TRAIN.OPTIMIZER == 'sgd':
-        optimizer = nn.SGD(model.parameters(),
+        optimizer = nn.SGD(model.trainable_params(),
                            learning_rate=cfg.TRAIN.LR,
                            weight_decay=cfg.TRAIN.WEIGHT_DECAY,
                            momentum=cfg.TRAIN.MOMENTUM)
@@ -191,10 +197,11 @@ def create_scheduler(total_steps, batchs_in_epoch):
             for cur_step in range(total_step)
         ]
 
-    bnm_scheduler = train_utils.BNMomentumScheduler(model,
-                                                    bnm_lmbd,
-                                                    last_epoch=last_epoch)
-    return lr_scheduler, bnm_scheduler
+    # bnm_scheduler = train_utils.BNMomentumScheduler(model,
+    #                                                 bnm_lmbd,
+    #                                                 last_epoch=last_epoch)
+    # return lr_scheduler, bnm_scheduler
+    return lr_scheduler
 
 
 
@@ -256,13 +263,14 @@ if __name__ == "__main__":
     net = PointRCNN(num_classes=num_class,
                     use_xyz=True,
                     mode='TRAIN')
-    model = Model(net)
+    loss_net = net_with_loss(net,train_loader.get_col_names())
+    
     # @TODO 学习率曲线未设置
     # lr_scheduler, bnm_scheduler = create_scheduler(optimizer, total_steps=total_step,
     #                                               batchs_in_epoch=train_loader.get_dataset_size())
-    optimizer = create_optimizer(model)
+    optimizer = create_optimizer(net)
     # optimizer.learning_rate = lr_scheduler
-
+    model = Model(loss_net,loss_fn=None,optimizer=optimizer)
     # load checkpoint if it is possible
     start_epoch = it = 0
     last_epoch = -1
@@ -283,10 +291,11 @@ if __name__ == "__main__":
 
     if cfg.TRAIN.LR_WARMUP and cfg.TRAIN.OPTIMIZER != 'adam_onecycle':
         # should not enter
-        lr_warmup_scheduler = train_utils.CosineWarmupLR(
-            optimizer,
-            T_max=cfg.TRAIN.WARMUP_EPOCH * len(train_loader),
-            eta_min=cfg.TRAIN.WARMUP_MIN)
+        pass
+        # lr_warmup_scheduler = train_utils.CosineWarmupLR(
+        #     optimizer,
+        #     T_max=cfg.TRAIN.WARMUP_EPOCH * len(train_loader),
+        #     eta_min=cfg.TRAIN.WARMUP_MIN)
     else:
         lr_warmup_scheduler = None
 
@@ -294,27 +303,30 @@ if __name__ == "__main__":
     logger.info('**********************Start training**********************')
     ckpt_dir = os.path.join(root_result_dir, 'ckpt')
     os.makedirs(ckpt_dir, exist_ok=True)
-    trainer = train_utils.Trainer(
-        model,
-        train_functions.model_joint_fn_decorator(),
-        optimizer,
-        ckpt_dir=ckpt_dir,
-        lr_scheduler=lr_scheduler,
-        bnm_scheduler=bnm_scheduler,
-        model_fn_eval=train_functions.model_joint_fn_decorator(),
-        tb_log=tb_log,
-        eval_frequency=1,
-        lr_warmup_scheduler=lr_warmup_scheduler,
-        warmup_epoch=cfg.TRAIN.WARMUP_EPOCH,
-        grad_norm_clip=cfg.TRAIN.GRAD_NORM_CLIP)
 
-    trainer.train(
-        it,
-        start_epoch,
-        args.epochs,
-        train_loader,
-        test_loader,
-        ckpt_save_interval=args.ckpt_save_interval,
-        lr_scheduler_each_iter=(cfg.TRAIN.OPTIMIZER == 'adam_onecycle'))
+    cb = [LossMonitor(200),TimeMonitor(200)]
+    # trainer = train_utils.Trainer(
+    #     model,
+    #     train_functions.model_joint_fn_decorator(),
+    #     optimizer,
+    #     ckpt_dir=ckpt_dir,
+    #     lr_scheduler=lr_scheduler,
+    #     bnm_scheduler=bnm_scheduler,
+    #     model_fn_eval=train_functions.model_joint_fn_decorator(),
+    #     tb_log=tb_log,
+    #     eval_frequency=1,
+    #     lr_warmup_scheduler=lr_warmup_scheduler,
+    #     warmup_epoch=cfg.TRAIN.WARMUP_EPOCH,
+    #     grad_norm_clip=cfg.TRAIN.GRAD_NORM_CLIP)
 
+    # trainer.train(
+    #     it,
+    #     start_epoch,
+    #     args.epochs,
+    #     train_loader,
+    #     test_loader,
+    #     ckpt_save_interval=args.ckpt_save_interval,
+    #     lr_scheduler_each_iter=(cfg.TRAIN.OPTIMIZER == 'adam_onecycle'))
+
+    model.train(args.epochs,train_loader,cb,dataset_sink_mode=False)
     logger.info('**********************End training**********************')

@@ -266,6 +266,34 @@ class GatherOperation(nn.Cell):
 
     def __init__(self):
         super().__init__()
+        self.func_name = 'gather_points_wrapper_fast'
+        self.back_func_name = "gather_points_grad_wrapper_fast"
+        self.so_name = "pointnet2_cuda"
+
+    def bprop(self,features: ms.Tensor, idx: ms.Tensor,out,dout):
+        """
+        :param ctx:
+        :param grad_out: (B, C, npoint, nsample) tensor of the gradients of the output from forward
+        :return:
+            grad_features: (B, C, N) gradient of the features
+        """
+        _, _, N = features.shape
+        B, C, npoint, nsample = dout.shape
+        op = get_func_from_so(so_name=self.so_name,
+                            # CPU_opt=True,
+                              func_name=self.back_func_name,
+                              out_shape=(B, C, N),
+                              out_dtype=ms.float32)
+        # grad_features = Variable(torch.cuda.FloatTensor(B, C, N).zero_())
+        # grad_features = ms.numpy.zeros((B, C, N))
+
+        grad_out_data = dout
+        B = ms.Tensor(B, ms.int32)
+        C = ms.Tensor(C, ms.int32)
+        N = ms.Tensor(N, ms.int32)
+        N = ms.Tensor(npoint, ms.int32)
+        grad_features = op(B, C, N, npoint, grad_out_data, idx, grad_features)
+        return grad_features, None
 
     def construct(self, features: ms.Tensor, idx: ms.Tensor) -> ms.Tensor:
         """
@@ -280,10 +308,10 @@ class GatherOperation(nn.Cell):
         B, npoint = idx.shape
         _, C, N = features.shape
         # output = ms.cuda.FloatTensor(B, C, npoint)
-        so_name = "pointnet2_cuda"
+        
         log_to_file("GatherOperation")
         log_to_file((B, C, npoint))
-        op = get_func_from_so(so_name=so_name,
+        op = get_func_from_so(so_name=self.so_name,
                               func_name='gather_points_wrapper_fast',
                               out_shape=(B, C, npoint),
                               out_dtype=ms.float32)
@@ -305,6 +333,28 @@ class GroupingOperation(nn.Cell):
         super(GroupingOperation, self).__init__()
         self.so_name = "pointnet2_cuda"
         self.func_name = "group_points_wrapper_fast"
+        self.back_func_name = "group_points_grad_wrapper"
+
+    def bprop(self, features: ms.Tensor, idx: ms.Tensor,out,dout):
+        """
+        :param ctx:
+        :param grad_out: (B, C, npoint, nsample) tensor of the gradients of the output from forward
+        :return:
+            grad_features: (B, C, N) gradient of the features
+        """
+        _, _, N = features.shape
+        B, C, npoint, nsample = dout.shape
+        op = get_func_from_so(so_name=self.back_func_name,
+                            # CPU_opt=True,
+                              func_name=self.func_name,
+                              out_shape=(B, C, N),
+                              out_dtype=ms.float32)
+        # grad_features = Variable(torch.cuda.FloatTensor(B, C, N).zero_())
+        # grad_features = ms.numpy.zeros((B, C, N))
+
+        grad_out_data = dout
+        grad_features = op(B, C, N, npoint, nsample, grad_out_data, idx)
+        return grad_features, None
 
     def construct(self, features: ms.Tensor, idx: ms.Tensor) -> ms.Tensor:
         """
@@ -352,6 +402,11 @@ class BallQuery(nn.Cell):
 
     def __init__(self):
         super().__init__()
+
+    def bprop(self, radius: float, nsample: int, xyz: ms.Tensor,
+                  new_xyz: ms.Tensor, out, dout):
+
+        return None, None, None, None
 
     def construct(self, radius: float, nsample: int, xyz: ms.Tensor,
                   new_xyz: ms.Tensor) -> ms.Tensor:
@@ -439,6 +494,9 @@ class QueryAndGroup(nn.Cell):
 
 
 class FurthestPointSampling(nn.Cell):
+
+    def bprop(self, xyz: ms.Tensor, npoint: ms.Tensor, out, dout):
+        return None, None
 
     def construct(self, xyz: ms.Tensor, npoint: int) -> ms.Tensor:
         """
@@ -655,6 +713,9 @@ class ThreeNN(nn.Cell):
         super(ThreeNN, self).__init__()
         # self.three_nn_wrapper = get_func_from_so("pointnet2_cuda.cpython-39-x86_64-linux-gnu.so","three_nn_wrapper_fast",out_shape=((B, N, 3),(B, N, 3)),out_dtype=(ms.float32,ms.int32))
 
+    def bprop(self, unknown: Tensor, known: Tensor, out, dout):
+        return None, None
+
     def construct(self, unknown: Tensor,
                   known: Tensor) -> Tuple[Tensor, Tensor]:
         """
@@ -697,6 +758,29 @@ class ThreeInterpolate(nn.Cell):
         super(ThreeInterpolate, self).__init__()
         self.so_name = "pointnet2_cuda.cpython-39-x86_64-linux-gnu.so"
         # self.three_interpolate_wrapper = get_func_from_so(self.so_name,"three_interpolate_wrapper_fast",-1)
+    
+    def bprop(self, features: Tensor, idx: Tensor,weight: Tensor, out, grad_out: ms.Tensor):
+        """
+        :param ctx:
+        :param grad_out: (B, C, N) tensor with gradients of outputs
+        :return:
+            grad_features: (B, C, M) tensor with gradients of features
+            None:
+            None:
+        """
+        B, c, m = features.shape
+        idx, weight, m = idx, weight, m
+        B, c, n = grad_out.shape
+        op = get_func_from_so(
+            self.so_name,
+            "three_interpolate_grad_wrapper_fast",
+            out_shape=(B, c, m),
+            out_dtype=ms.float32)
+        # grad_features = Variable(torch.cuda.FloatTensor(B, c, m).zero_())
+        grad_out_data = grad_out
+
+        grad_features = op(B, c, n, m, grad_out_data, idx, weight, grad_features)
+        return grad_features, None, None
 
     def construct(self, features: Tensor, idx: Tensor,
                   weight: Tensor) -> Tensor:

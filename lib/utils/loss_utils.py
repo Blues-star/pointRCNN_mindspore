@@ -95,8 +95,15 @@ def _sigmoid_cross_entropy_with_logits(logits:ms.Tensor, labels:ms.Tensor):
     # loss = loss_ftor(F.logsigmoid(logits), labels)
     return loss
 
+def get_reg_loss(pred_reg, reg_label,mask, loc_scope, loc_bin_size, num_head_bin, anchor_size,
+                 get_xz_fine=True, get_y_by_bin=False, loc_y_scope=0.5, loc_y_bin_size=0.25, get_ry_fine=False):
+    _pred = pred_reg*mask.expand_dims(-1)
+    _reg_label = reg_label*mask.expand_dims(-1)
+    return get_reg_loss_ori(_pred, _reg_label,mask, loc_scope, loc_bin_size, num_head_bin, anchor_size,
+                 get_xz_fine=True, get_y_by_bin=False, loc_y_scope=0.5, loc_y_bin_size=0.25, get_ry_fine=False)
 
-def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anchor_size,
+
+def get_reg_loss_ori(pred_reg, reg_label,mask, loc_scope, loc_bin_size, num_head_bin, anchor_size,
                  get_xz_fine=True, get_y_by_bin=False, loc_y_scope=0.5, loc_y_bin_size=0.25, get_ry_fine=False):
 
     """
@@ -115,6 +122,7 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
     :param get_ry_fine:
     :return:
     """
+    # assert ops.Shape()(pred_reg)[-1] > 0
     per_loc_bin_num = int(loc_scope / loc_bin_size) * 2
     loc_y_bin_num = int(loc_y_scope / loc_y_bin_size) * 2
 
@@ -137,18 +145,29 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
     z_bin_l, z_bin_r = per_loc_bin_num, per_loc_bin_num * 2
     start_offset = z_bin_r
     cross_entropy = mnn.SoftmaxCrossEntropyWithLogits(True,'mean')
-    
-    t1 = pred_reg[:, x_bin_l: x_bin_r].copy().astype(ms.float32) #[N 12]
-    # t1.shape = t1.shape
-    t2 = pred_reg[:, z_bin_l: z_bin_r].copy().astype(ms.float32) #[N 12]
+    op = ops.SoftmaxCrossEntropyWithLogits()
+    # t1 = pred_reg[:, x_bin_l: x_bin_r].copy().astype(ms.float32) #[N 12]
+    # ms.Tensor.gather()
+    t1 = pred_reg.gather(ms.numpy.arange(x_bin_l,x_bin_r),1)
+    # t2 = pred_reg[:, z_bin_l: z_bin_r].copy().astype(ms.float32) #[N 12]
+    t2 = pred_reg.gather(ms.numpy.arange(z_bin_l,z_bin_r),1)
+    assert t1.shape == t2.shape
+    # print(t1.shape,t2.shape)
     # t2.shape = t2.shape
-    # assert ops.Shape()(t1)[-1] > 0 # ops.Shape()(t1) == (-1, -1)
-    loss_x_bin = cross_entropy(t1, x_bin_label)
-    loss_z_bin = cross_entropy(t2, z_bin_label)
+    # print(ops.Shape()(t1))
+    assert -1 not in ops.Shape()(t1) # ops.Shape()(t1) == (-1, -1) ??
+    # loss_x_bin = cross_entropy(t1, x_bin_label)
+    # loss_z_bin = cross_entropy(t2, z_bin_label)
+    # TODO 用mask覆盖交叉熵结果然后求mean
+    loss_x_bin,_ = op(t1, ops.one_hot(x_bin_label,t1.shape[-1],ms.Tensor(1.0,ms.float32),ms.Tensor(0,ms.float32)))
+    loss_z_bin,_ = op(t2,ops.one_hot(z_bin_label,t2.shape[-1],ms.Tensor(1.0,ms.float32),ms.Tensor(0,ms.float32)))
+    loss_x_bin = (loss_x_bin*mask).mean()
+    loss_z_bin = (loss_z_bin*mask).mean()
+
     reg_loss_dict['loss_x_bin'] = loss_x_bin.asnumpy()
     reg_loss_dict['loss_z_bin'] = loss_z_bin.asnumpy()
     loc_loss += loss_x_bin + loss_z_bin
-    smooth_l1_loss = mnn.SmoothL1Loss()
+    smooth_l1_loss = mnn.SmoothL1Loss(reduction='mean')
     if get_xz_fine:
         x_res_l, x_res_r = per_loc_bin_num * 2, per_loc_bin_num * 3
         z_res_l, z_res_r = per_loc_bin_num * 3, per_loc_bin_num * 4
@@ -169,7 +188,7 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
         x_bin_onehot = ms.numpy.zeros((x_bin_label.shape[0], per_loc_bin_num))
         x_bin_onehot = ops.functional.tensor_scatter_elements(x_bin_onehot,x,ms.numpy.ones(x.shape),axis=1)
         z = z_bin_label.view(-1, 1)
-        z_bin_onehot = ms.numpy.zeros((z_bin_label.size(0), per_loc_bin_num))
+        z_bin_onehot = ms.numpy.zeros((z_bin_label.shape[0], per_loc_bin_num))
         z_bin_onehot = ops.functional.tensor_scatter_elements(z_bin_onehot,z,ms.numpy.ones(z.shape),axis=1)
 
 
@@ -258,7 +277,7 @@ def get_reg_loss(pred_reg, reg_label, loc_scope, loc_bin_size, num_head_bin, anc
     ry_bin_onehot = ops.functional.tensor_scatter_elements(ry_bin_onehot,ry,ms.numpy.ones(ry.shape),axis=1)
     
     loss_ry_bin = cross_entropy(pred_reg[:, ry_bin_l:ry_bin_r], ry_bin_label)
-    loss_ry_res = smooth_l1_loss((pred_reg[:, ry_res_l: ry_res_r] * ry_bin_onehot).sum(dim=1), ry_res_norm_label)
+    loss_ry_res = smooth_l1_loss((pred_reg[:, ry_res_l: ry_res_r] * ry_bin_onehot).sum(axis=1), ry_res_norm_label)
 
     reg_loss_dict['loss_ry_bin'] = loss_ry_bin.asnumpy()
     reg_loss_dict['loss_ry_res'] = loss_ry_res.asnumpy()

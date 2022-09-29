@@ -1,4 +1,3 @@
-from turtle import back
 import mindspore as ms
 from mindspore import nn,ops
 from mindspore.nn import LossBase
@@ -6,13 +5,15 @@ from lib.config import cfg
 import lib.utils.loss_utils as loss_utils
 
 class net_with_loss(nn.Cell):
-    def __init__(self, backbone):
+    def __init__(self, backbone,cols_name):
         super().__init__()
         self._backbone = backbone
+        self.cols_name = cols_name
         # self._loss_fn = loss_fn
         
 
-    def construct(self, **data):
+    def construct(self, *cols):
+        data = dict(zip(self.cols_name,cols))
         if cfg.RPN.ENABLED:
             pts_rect, pts_features, pts_input = data['pts_rect'], data['pts_features'], data['pts_input']
             gt_boxes3d = data['gt_boxes3d']
@@ -122,8 +123,9 @@ class net_with_loss(nn.Cell):
             t1 = ops.masked_select(rpn_reg.view(point_num, -1),fg_mask.expand_dims(-1)).reshape(-1,reg_shape[-1])
             t2 = ops.masked_select(rpn_reg_label.view(point_num, 7),fg_mask.expand_dims(-1)).reshape(-1,rpn_reg_label_shape[-1])
             loss_loc, loss_angle, loss_size, reg_loss_dict = \
-                loss_utils.get_reg_loss(t1,
-                                        t2,
+                loss_utils.get_reg_loss(rpn_reg.view(point_num, -1),
+                                        rpn_reg_label.view(point_num, 7),
+                                        fg_mask,
                                         loc_scope=cfg.RPN.LOC_SCOPE,
                                         loc_bin_size=cfg.RPN.LOC_BIN_SIZE,
                                         num_head_bin=cfg.RPN.NUM_HEAD_BIN,

@@ -5,7 +5,7 @@ from lib.net.rcnn_net import RCNNNet
 from lib.config import cfg
 
 import mindspore as ms
-from mindspore import nn,ops
+from mindspore import nn, ops
 
 
 class PointRCNN(nn.Cell):
@@ -68,6 +68,3 @@ class PointRCNN(nn.Cell):
             raise NotImplementedError
 
         return output
-
-
-

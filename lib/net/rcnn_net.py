@@ -2,9 +2,8 @@
 # import torch.nn as nn
 # import torch.nn.functional as F
 
-from mimetypes import common_types
 import mindspore as ms
-from mindspore import nn,ops
+from mindspore import nn, ops
 from mindspore.ops import functional
 from mindspore import Tensor
 from mindspore.common.initializer import initializer
@@ -20,7 +19,7 @@ import lib.utils.roipool3d.roipool3d_utils as roipool3d_utils
 
 
 class RCNNNet(nn.Cell):
-    def __init__(self, num_classes, input_channels=0, use_xyz=True,mode='TRAIN'):
+    def __init__(self, num_classes, input_channels=0, use_xyz=True, mode='TRAIN'):
         super().__init__()
 
         # self.SA_modules = nn.ModuleList()
@@ -71,8 +70,8 @@ class RCNNNet(nn.Cell):
             self.cls_loss_func = ops.BinaryCrossEntropy() 
         elif cfg.RCNN.LOSS_CLS == 'CrossEntropy':
 
-            cls_weight = ms.Tensor.from_numpy(cfg.RCNN.CLS_WEIGHT).float()
-            self.cls_loss_func = nn.CrossEntropyLoss(weight=cls_weight,ignore_index=-1, reduce=None)
+            cls_weight = ms.Tensor.from_numpy(cfg.RCNN.CLS_WEIGHT).astype(ms.float32)
+            self.cls_loss_func = nn.CrossEntropyLoss(weight=cls_weight, ignore_index=-1, reduce=None)
         else:
             raise NotImplementedError
 
@@ -218,4 +217,3 @@ class RCNNNet(nn.Cell):
         if self.training:
             ret_dict.update(target_dict)
         return ret_dict
-

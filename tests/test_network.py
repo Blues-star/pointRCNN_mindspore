@@ -11,11 +11,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../lib/net'))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tools/'))
 from lib.config import cfg, cfg_from_file, save_config_to_file
-from mindspore import context
+
 from lib.net.point_rcnn import PointRCNN
 from tools.datautil import create_dataloader, create_dataloader_debug
 from lib.net.ms_loss import net_with_loss
-
+from mindspore import context
 ms.context.set_context(device_target="GPU")
 ms.context.set_context(mode=ms.PYNATIVE_MODE,pynative_synchronize=True)
 logger = logging.getLogger("net")
@@ -55,13 +55,13 @@ if cfg_file is not None:
 #     "gt_boxes3d":ms.numpy.rand((1, 1, 7)),
 # }
 data,_,num_class = create_dataloader_debug(logger)
-data_batch = data.create_dict_iterator().__next__()
-print(data_batch.keys())
+data_batch = data.create_tuple_iterator().__next__()
+# print(data_batch.keys())
 
 net = PointRCNN(num_classes=num_class,
                     use_xyz=True,
                     mode='TRAIN')
-model = net_with_loss(net)
-ans = model(**data_batch)
+model = net_with_loss(net,data.get_col_names())
+ans = model(*data_batch)
 print(f"loss: {ans}")
 print("test passed!")
