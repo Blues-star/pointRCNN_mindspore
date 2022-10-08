@@ -1,0 +1,232 @@
+BallQuery
+(16, 512, 64)
+BallQuery
+(16, 256, 64)
+BallQuery
+(16, 256, 64)
+BallQuery
+(16, 256, 64)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 512, 16)
+BallQuery
+(16, 512, 16)
+BallQuery
+(16, 512, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 16)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)
+BallQuery
+(16, 256, 32)

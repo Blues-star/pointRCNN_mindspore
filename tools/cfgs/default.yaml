@@ -28,7 +28,7 @@ RPN:
     USE_INTENSITY: False
 
     # config of bin-based loss
-    LOC_XZ_FINE: True
+    LOC_XZ_FINE: False
     LOC_SCOPE: 3.0
     LOC_BIN_SIZE: 0.5
     NUM_HEAD_BIN: 12

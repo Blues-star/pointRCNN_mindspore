@@ -99,8 +99,9 @@ class ProposalLayer(nn.Cell):
                 # cur_scores = ops.masked_select(scores_ordered,dist_mask) #[N,]
                 # cur_proposals = ops.masked_select(proposals_ordered,dist_mask.expand_dims(-1)).reshape((-1,7)) # [N, 7]
                 #######################
-                cur_scores, idx = ops.Sort(descending=True)(scores_ordered*dist_mask.astype(ms.int32))
+                _, idx = ops.Sort(descending=True)(dist_mask.astype(ms.float32))
                 # fetch pre nms top K
+                cur_scores = scores_ordered[idx]
                 cur_proposals = proposals_ordered[idx]
 
                 cur_scores = cur_scores[:pre_top_n_list[i]]
@@ -111,8 +112,9 @@ class ProposalLayer(nn.Cell):
                 # this area doesn't have any points, so use rois of first area
                 # cur_scores = scores_ordered[first_mask]
                 # cur_proposals = proposals_ordered[first_mask]
-                cur_scores = ops.masked_select(scores_ordered,first_mask)
-                cur_proposals = ops.masked_select(proposals_ordered,first_mask.expand_dims(-1)).reshape((-1,7))
+                _, idx = ops.Sort(descending=True)(first_mask.astype(ms.float32))
+                cur_scores = scores_ordered[idx]
+                cur_proposals = proposals_ordered[idx]
 
                 # fetch top K of first area
                 cur_scores = cur_scores[pre_top_n_list[i - 1]:][:pre_top_n_list[i]]

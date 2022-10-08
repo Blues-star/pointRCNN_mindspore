@@ -2,7 +2,7 @@ import time
 import numpy as np
 import os
 import pickle
-import torch
+# import torch
 import mindspore as ms
 from mindspore import Tensor
 from lib.datasets.kitti_dataset import KittiDataset
@@ -943,7 +943,7 @@ class KittiRCNNDataset(KittiDataset):
         elif fg_num_rois > 0 and bg_num_rois == 0:
             # sampling fg
             rand_num = np.floor(np.random.rand(cfg.RCNN.ROI_PER_IMAGE ) * fg_num_rois)
-            rand_num = Tensor.from_numpy(rand_num).type_as(gt_boxes3d).long()
+            rand_num = ms.Tensor.from_numpy(rand_num).type_as(gt_boxes3d).astype(ms.int32)
             fg_inds = fg_inds[rand_num]
             fg_rois_per_this_image = cfg.RCNN.ROI_PER_IMAGE
             bg_rois_per_this_image = 0

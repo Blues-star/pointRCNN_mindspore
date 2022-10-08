@@ -2,6 +2,8 @@ from typing import List, Tuple
 import mindspore as ms
 from mindspore import nn, ops, Tensor
 import sys
+import pointnet2_cuda as pointnet2
+import torch
 
 sys.path.append("../")
 sys.path.append("../../")
@@ -104,32 +106,39 @@ class _ConvBase(nn.Cell):
         cl = []
         if preact:
             if bn:
-                cl.append(bn_unit)
+                # cl.append(bn_unit)
+                self.insert_child_to_cell(name + 'bn', bn_unit)
                 # self.add_module(name + 'bn', bn_unit)
 
             if activation is not None:
-                cl.append(activation)
+                self.insert_child_to_cell(name + 'activation', activation)
+                # cl.append(activation)
                 # self.add_module(name + 'activation', activation)
 
             if not bn and instance_norm:
-                cl.append(in_unit)
+                self.insert_child_to_cell(name + 'in', in_unit)
+                # cl.append(in_unit)
                 # self.add_module(name + 'in', in_unit)
-        cl.append(conv_unit)
+        self.insert_child_to_cell(name + 'conv', conv_unit)
+        # cl.append(conv_unit)
         # self.add_module(name + 'conv', conv_unit)
 
         if not preact:
             if bn:
-                cl.append(bn_unit)
+                self.insert_child_to_cell(name + 'bn', bn_unit)
+                # cl.append(bn_unit)
                 # self.add_module(name + 'bn', bn_unit)
 
             if activation is not None:
-                cl.append(activation)
+                self.insert_child_to_cell(name + 'activation', activation)
+                # cl.append(activation)
                 # self.add_module(name + 'activation', activation)
 
             if not bn and instance_norm:
-                cl.append(in_unit)
+                self.insert_child_to_cell(name + 'in', in_unit)
+                # cl.append(in_unit)
                 # self.add_module(name + 'in', in_unit)SequentialCell
-        self.celllist = nn.CellList(cl)
+        # self.celllist = nn.CellList(cl)
 
 
 class Conv1d(_ConvBase):
@@ -171,7 +180,8 @@ class Conv1d(_ConvBase):
     def construct(self, inputs):
         # return self.celllist(inputs)
         x = inputs
-        for cell in self.celllist:
+        for cell in self.cells():
+        # for cell in self.celllist:
             if not isinstance(cell, nn.BatchNorm2d):
                 x = cell(x)
             else:
@@ -221,7 +231,8 @@ class Conv2d(_ConvBase):
 
     def construct(self, inputs):
         x = inputs
-        for cell in self.celllist:
+        for cell in self.cells():
+        # for cell in self.celllist:
             # if not isinstance(cell,nn.BatchNorm2d):
             #     x = cell(x)
             # else:
@@ -291,8 +302,8 @@ class GatherOperation(nn.Cell):
         B = ms.Tensor(B, ms.int32)
         C = ms.Tensor(C, ms.int32)
         N = ms.Tensor(N, ms.int32)
-        N = ms.Tensor(npoint, ms.int32)
-        grad_features = op(B, C, N, npoint, grad_out_data, idx, grad_features)
+        npoint = ms.Tensor(npoint, ms.int32)
+        grad_features = op(B, C, N, npoint, grad_out_data, idx)
         return grad_features, None
 
     def construct(self, features: ms.Tensor, idx: ms.Tensor) -> ms.Tensor:
@@ -312,7 +323,7 @@ class GatherOperation(nn.Cell):
         log_to_file("GatherOperation")
         log_to_file((B, C, npoint))
         op = get_func_from_so(so_name=self.so_name,
-                              func_name='gather_points_wrapper_fast',
+                              func_name=self.func_name,
                               out_shape=(B, C, npoint),
                               out_dtype=ms.float32)
         # pointnet2.gather_points_wrapper(B, C, N, npoint, features, idx, output)
@@ -389,8 +400,10 @@ class GroupingOperation(nn.Cell):
         _npoint = ms.Tensor(npoint,ms.int32)
         _nsample = ms.Tensor(nsample,ms.int32)
         # output = op(B, C, N, npoint, nsample, _features, _idx)
+        print("GroupingOperation")
         print(_B, _C, _N, _npoint, _nsample)
         output = op(_B, _C, _N, _npoint, _nsample, features, idx)
+        # print("msp_output",output.mean(),output.std())
         # ctx.for_backwards = (idx, N)
         return output
 
@@ -411,7 +424,6 @@ class BallQuery(nn.Cell):
     def construct(self, radius: float, nsample: int, xyz: ms.Tensor,
                   new_xyz: ms.Tensor) -> ms.Tensor:
         """
-        :param ctx:
         :param radius: float, radius of the balls
         :param nsample: int, maximum number of features in the balls
         :param xyz: (B, N, 3) xyz coordinates of the features
@@ -425,22 +437,23 @@ class BallQuery(nn.Cell):
         B, N, _ = xyz.shape
         npoint = new_xyz.shape[1]
         # idx = ms.cuda.IntTensor(B, npoint, nsample).zero_()
-        log_to_file("BallQuery")
-        log_to_file((B, npoint, nsample))
-        _new_xyz = new_xyz.copy()
+        # log_to_file("BallQuery")
+        # log_to_file((B, npoint, nsample))
+        # _new_xyz = new_xyz.copy()
         ball_query_wrapper = get_func_from_so("pointnet2_cuda",
                                               "ball_query_wrapper_fast",
                                               out_shape=(B, npoint, nsample),
                                               out_dtype=ms.int32)
-        assert B > 0 and N > 0 and npoint > 0 and radius > 0 and nsample > 0
-        print(B,N,npoint,radius,nsample)
-        _B = ms.Tensor(B, ms.dtype.int32)
-        _N = ms.Tensor(N, ms.dtype.int32)
+        # assert B > 0 and N > 0 and npoint > 0 and radius > 0 and nsample > 0
+        # print(B, N, npoint, radius, nsample)
+        # _B = ms.Tensor(B, ms.dtype.int32)
+        # _N = ms.Tensor(N, ms.dtype.int32)
         _npoint = ms.Tensor(npoint, ms.dtype.int32)
         _radius = ms.Tensor(radius, ms.dtype.float32)
         _nsample = ms.Tensor(nsample, ms.dtype.int32)
-        print(_B, _N, _npoint, _radius, _nsample)
-        idx = ball_query_wrapper(_B, _N, _npoint, _radius, _nsample, _new_xyz, xyz)
+        print(B, N, _npoint, _radius, _nsample)
+        idx = ball_query_wrapper(B, N, npoint, radius, nsample, new_xyz, xyz)
+        # assert idx.shape[0] == B
         return idx
 
 
@@ -470,17 +483,28 @@ class QueryAndGroup(nn.Cell):
             new_features: (B, 3 + C, npoint, nsample)
         """
         assert new_xyz.shape[2] == 3
+        ball_query = BallQuery()
         idx = ball_query(self.radius, self.nsample, xyz, new_xyz)
+        print('radius: ', self.radius)
+        print('nsample: ', self.nsample)
+        print('xyz: ', xyz.mean(), xyz.max(), xyz.min())
+        print('new_xyz: ', new_xyz.mean(), new_xyz.max(), new_xyz.min())
         # idx = query_ball_point(self.radius, self.nsample, xyz, new_xyz)
         # xyz_trans = xyz.transpose(1, 2).contiguous()
         xyz_trans = xyz.swapaxes(1, 2)
+        # print('xyz_trans: ', xyz_trans.mean())
+        print('idx: ', idx.sum())
         grouped_xyz = grouping_operation(xyz_trans,
                                          idx)  # (B, 3, npoint, nsample)
+        # print('grouped_xyz: ', grouped_xyz.mean())
         # ms.Tensor.expand_dims()
         grouped_xyz -= new_xyz.swapaxes(1, 2).expand_dims(-1)
+        # print('grouped_xyz: ', grouped_xyz.mean())
 
         if features is not None:
             grouped_features = grouping_operation(features, idx)
+            print('features: ', features.mean(), 'idx: ', idx.sum())
+            print('grouped_features: ', grouped_features.mean())
             if self.use_xyz:
                 new_features = ops.Concat(1)([grouped_xyz, grouped_features
                                               ])  # (B, C + 3, npoint, nsample)
@@ -489,7 +513,7 @@ class QueryAndGroup(nn.Cell):
         else:
             assert self.use_xyz, "Cannot have not features and not use xyz as a feature!"
             new_features = grouped_xyz
-
+        # print('new_features: ', new_features.mean())
         return new_features
 
 
@@ -553,6 +577,8 @@ class _PointnetSAModuleBase(nn.Cell):
             new_features: (B, npoint, \sum_k(mlps[k][-1])) tensor of the new_features descriptors
         """
         new_features_list = []
+        if features is not None:
+            print('features: ', features.mean())
 
         xyz_flipped = xyz.swapaxes(1, 2)
         if new_xyz is None:
@@ -565,11 +591,14 @@ class _PointnetSAModuleBase(nn.Cell):
                     1, 2) if self.npoint is not None else None
 
         for i in range(len(self.groupers)):
+            # if features is not None:
+            #     print('features: ', features.mean())
             new_features = self.groupers[i](
                 xyz, new_xyz, features)  # (B, C, npoint, nsample)
-
+            # print(f'group {i} new feature: ', new_features.mean())
             new_features = self.mlps[i](
                 new_features)  # (B, mlp[-1], npoint, nsample)
+            # print(f'mlp {i} new feature: ', new_features.mean())
             if self.pool_method == 'max_pool':
                 # new_features = F.max_pool2d(
                 #     new_features, kernel_size=[1, new_features.size(3)]
@@ -590,6 +619,7 @@ class _PointnetSAModuleBase(nn.Cell):
             # new_features = new_features.squeeze(-1)  # (B, mlp[-1], npoint)
             new_features = ops.Squeeze(-1)(new_features)
             new_features_list.append(new_features)
+            # print("NEW_features: ", new_features.mean())
 
         # return new_xyz, cat(new_features_list, dim=1)
         return new_xyz, ops.Concat(1)(new_features_list)
@@ -655,10 +685,8 @@ class PointnetSAModuleMSG(_PointnetSAModuleBase):
         assert len(radii) == len(nsamples) == len(mlps)
 
         self.npoint = npoint
-        # self.groupers = nn.ModuleList()
-        self.groupers = []
-        # self.mlps = nn.ModuleList()
-        self.mlps = []
+        self.groupers = nn.CellList()
+        self.mlps = nn.CellList()
         for i in range(len(radii)):
             radius = radii[i]
             nsample = nsamples[i]

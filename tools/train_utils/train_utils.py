@@ -4,6 +4,7 @@ import os
 # import torch.nn as nn
 # from torch.nn.utils import clip_grad_norm_
 import mindspore
+# from mindspore import load_checkpoint
 from mindspore import nn
 import tqdm
 # import torch.optim.lr_scheduler as lr_sched
@@ -47,16 +48,16 @@ class BNMomentumScheduler(object):
         self.model.apply(self.setter(self.lmbd(epoch)))
 
 
-class CosineWarmupLR(lr_sched._LRScheduler):
-    def __init__(self, optimizer, T_max, eta_min=0, last_epoch=-1):
-        self.T_max = T_max
-        self.eta_min = eta_min
-        super(CosineWarmupLR, self).__init__(optimizer, last_epoch)
+# class CosineWarmupLR(lr_sched._LRScheduler):
+#     def __init__(self, optimizer, T_max, eta_min=0, last_epoch=-1):
+#         self.T_max = T_max
+#         self.eta_min = eta_min
+#         super(CosineWarmupLR, self).__init__(optimizer, last_epoch)
 
-    def get_lr(self):
-        return [self.eta_min + (base_lr - self.eta_min) *
-                (1 - math.cos(math.pi * self.last_epoch / self.T_max)) / 2
-                for base_lr in self.base_lrs]
+#     def get_lr(self):
+#         return [self.eta_min + (base_lr - self.eta_min) *
+#                 (1 - math.cos(math.pi * self.last_epoch / self.T_max)) / 2
+#                 for base_lr in self.base_lrs]
 
 
 def checkpoint_state(model=None, optimizer=None, epoch=None, it=None):
@@ -80,18 +81,18 @@ def save_checkpoint(state, filename='checkpoint'):
 def load_checkpoint(model=None, optimizer=None, filename='checkpoint', logger=cur_logger):
     if os.path.isfile(filename):
         logger.info("==> Loading from checkpoint '{}'".format(filename))
-        checkpoint = torch.load(filename)
-        epoch = checkpoint['epoch'] if 'epoch' in checkpoint.keys() else -1
-        it = checkpoint.get('it', 0.0)
-        if model is not None and checkpoint['model_state'] is not None:
-            model.load_state_dict(checkpoint['model_state'])
-        if optimizer is not None and checkpoint['optimizer_state'] is not None:
-            optimizer.load_state_dict(checkpoint['optimizer_state'])
-        logger.info("==> Done")
+        checkpoint = mindspore.load_checkpoint(filename, model)
+        # epoch = checkpoint['epoch'] if 'epoch' in checkpoint.keys() else -1
+        # it = checkpoint.get('it', 0.0)
+        # if model is not None and checkpoint['model_state'] is not None:
+        #     model.load_state_dict(checkpoint['model_state'])
+        # if optimizer is not None and checkpoint['optimizer_state'] is not None:
+        #     optimizer.load_state_dict(checkpoint['optimizer_state'])
+        # logger.info("==> Done")
     else:
         raise FileNotFoundError
 
-    return it, epoch
+    # return it, epoch
 
 
 def load_part_ckpt(model, filename, logger=cur_logger, total_keys=-1):

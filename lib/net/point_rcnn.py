@@ -31,6 +31,7 @@ class PointRCNN(nn.Cell):
             output = {}
             # rpn inference
             rpn_output = self.rpn(input_data)
+            print('rpn_cls: ', rpn_output['rpn_cls'].mean())
             output.update(rpn_output)
 
             # rcnn inference

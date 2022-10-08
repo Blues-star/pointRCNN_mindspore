@@ -48,15 +48,15 @@ class net_with_loss(nn.Cell):
         if cfg.RPN.ENABLED and not cfg.RPN.FIXED:
             rpn_cls, rpn_reg = ret_dict['rpn_cls'], ret_dict['rpn_reg']
             rpn_loss = self.get_rpn_loss(rpn_cls, rpn_reg, rpn_cls_label, rpn_reg_label, tb_dict)
-            loss += rpn_loss
-            disp_dict['rpn_loss'] = rpn_loss.item()
+            loss += rpn_loss.asnumpy().item()
+            disp_dict['rpn_loss'] = rpn_loss.asnumpy().item()
 
         if cfg.RCNN.ENABLED:
             rcnn_loss = self.get_rcnn_loss(ret_dict, tb_dict)
             disp_dict['reg_fg_sum'] = tb_dict['rcnn_reg_fg']
-            loss += rcnn_loss
+            loss += rcnn_loss.asnumpy().item()
 
-        disp_dict['loss'] = loss.asnumpy().item()
+        disp_dict['loss'] = loss
 
         # return ModelReturn(loss, tb_dict, disp_dict)
         return loss

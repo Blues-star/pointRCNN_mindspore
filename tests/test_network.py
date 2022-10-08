@@ -62,6 +62,7 @@ net = PointRCNN(num_classes=num_class,
                     use_xyz=True,
                     mode='TRAIN')
 model = net_with_loss(net,data.get_col_names())
+print(data_batch)
 ans = model(*data_batch)
 print(f"loss: {ans}")
 print("test passed!")

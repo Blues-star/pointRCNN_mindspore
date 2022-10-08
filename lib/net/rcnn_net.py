@@ -23,7 +23,7 @@ class RCNNNet(nn.Cell):
         super().__init__()
 
         # self.SA_modules = nn.ModuleList()
-        self.SA_modules = []
+        self.SA_modules = nn.CellList()
         channel_in = input_channels
         self.training = (mode=='TRAIN')
         if cfg.RCNN.USE_RPN_FEATURES:
@@ -150,6 +150,8 @@ class RCNNNet(nn.Cell):
                 target_dict['pts_input'] = pts_input
             else:
                 rpn_xyz, rpn_features = input_data['rpn_xyz'], input_data['rpn_features']
+                print("rpn_xyz",rpn_xyz.mean())
+                print("rpn_features",rpn_features.mean())
                 batch_rois = input_data['roi_boxes3d']
                 if cfg.RCNN.USE_INTENSITY:
                     # False
@@ -209,7 +211,7 @@ class RCNNNet(nn.Cell):
             l_xyz.append(li_xyz)
             l_features.append(li_features)
 
-        # Tensor.squeeze()
+        # Tensor.squeeze() 有误差
         rcnn_cls = self.cls_layer(l_features[-1]).swapaxes(1, 2).squeeze(axis=1)  # (B, 1 or 2)
         rcnn_reg = self.reg_layer(l_features[-1]).swapaxes(1, 2).squeeze(axis=1)  # (B, C)
         ret_dict = {'rcnn_cls': rcnn_cls, 'rcnn_reg': rcnn_reg}

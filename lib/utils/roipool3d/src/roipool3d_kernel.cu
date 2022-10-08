@@ -211,6 +211,8 @@ void roipool3dLauncher(int batch_size, int pts_num, int boxes_num, int feature_i
 
     // printf("batch_size=%d, pts_num=%d, boxes_num=%d\n", batch_size, pts_num, boxes_num);
     int *pts_assign = NULL;
+    cudaMemset(pooled_features, 0, batch_size*boxes_num*512*(3+feature_in_len)*sizeof(float));
+    cudaMemset(pooled_empty_flag, 0, batch_size*boxes_num*sizeof(int));
     cudaMalloc(&pts_assign, batch_size * pts_num * boxes_num * sizeof(int));  // (batch_size, N, M)
     // cudaMemset(&pts_assign, -1, batch_size * pts_num * boxes_num * sizeof(int));
 

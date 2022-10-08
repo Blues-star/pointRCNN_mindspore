@@ -1,11 +1,15 @@
 import _init_path
 import os
 import numpy as np
-import torch
+# import torch
+import mindspore as ms
+from mindspore import nn, ops, Model
+from mindspore import load_checkpoint
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 from lib.net.point_rcnn import PointRCNN
 from lib.datasets.kitti_rcnn_dataset import KittiRCNNDataset
+from tools.datautil import batchpad
 import tools.train_utils.train_utils as train_utils
 from lib.utils.bbox_transform import decode_bbox_target
 from tools.kitti_object_eval_python.evaluate import evaluate as kitti_evaluate
@@ -19,7 +23,7 @@ import logging
 import re
 import glob
 import time
-from tensorboardX import SummaryWriter
+# from tensorboardX import SummaryWriter
 import tqdm
 
 
@@ -125,7 +129,7 @@ def eval_one_epoch_rpn(model, dataloader, epoch_id, result_dir, logger):
         os.makedirs(seg_output_dir, exist_ok=True)
 
     logger.info('---- EPOCH %s RPN EVALUATION ----' % epoch_id)
-    model.eval()
+    # model.eval()
 
     thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
     total_recalled_bbox_list, total_gt_bbox = [0] * 5, 0
@@ -144,14 +148,14 @@ def eval_one_epoch_rpn(model, dataloader, epoch_id, result_dir, logger):
             rpn_cls_label, rpn_reg_label = data['rpn_cls_label'], data['rpn_reg_label']
             gt_boxes3d = data['gt_boxes3d']
 
-            rpn_cls_label = torch.from_numpy(rpn_cls_label).cuda(non_blocking=True).long()
+            rpn_cls_label = ms.Tensor.from_numpy(rpn_cls_label).astype(ms.int32)
             if gt_boxes3d.shape[1] == 0:  # (B, M, 7)
                 pass
                 # logger.info('%06d: No gt box' % sample_id)
             else:
-                gt_boxes3d = torch.from_numpy(gt_boxes3d).cuda(non_blocking=True).float()
+                gt_boxes3d = ms.Tensor.from_numpy(gt_boxes3d).astype(ms.float32)
 
-        inputs = torch.from_numpy(pts_input).cuda(non_blocking=True).float()
+        inputs = ms.Tensor.from_numpy(pts_input).astype(ms.float32)
         input_data = {'pts_input': inputs}
 
         # model inference
@@ -160,8 +164,8 @@ def eval_one_epoch_rpn(model, dataloader, epoch_id, result_dir, logger):
         backbone_xyz, backbone_features = ret_dict['backbone_xyz'], ret_dict['backbone_features']
 
         rpn_scores_raw = rpn_cls[:, :, 0]
-        rpn_scores = torch.sigmoid(rpn_scores_raw)
-        seg_result = (rpn_scores > cfg.RPN.SCORE_THRESH).long()
+        rpn_scores = ops.sigmoid(rpn_scores_raw)
+        seg_result = (rpn_scores > cfg.RPN.SCORE_THRESH).astype(ms.int32)
 
         # proposal layer
         rois, roi_scores_raw = model.rpn.proposal_layer(rpn_scores_raw, rpn_reg, backbone_xyz)  # (B, M, 7)
@@ -188,34 +192,35 @@ def eval_one_epoch_rpn(model, dataloader, epoch_id, result_dir, logger):
                 recalled_num = 0
                 if cur_gt_boxes3d.shape[0] > 0:
                     iou3d = iou3d_utils.boxes_iou3d_gpu(cur_boxes3d, cur_gt_boxes3d[:, 0:7])
-                    gt_max_iou, _ = iou3d.max(dim=0)
+                    gt_max_iou, _ = iou3d.max(axis=0)
 
                     for idx, thresh in enumerate(thresh_list):
-                        total_recalled_bbox_list[idx] += (gt_max_iou > thresh).sum().item()
-                    recalled_num = (gt_max_iou > 0.7).sum().item()
+                        total_recalled_bbox_list[idx] += (gt_max_iou > thresh).sum().asnumpy().item()
+                    recalled_num = (gt_max_iou > 0.7).sum().asnumpy().item()
                     total_gt_bbox += cur_gt_boxes3d.__len__()
 
                 fg_mask = cur_rpn_cls_label > 0
-                correct = ((cur_seg_result == cur_rpn_cls_label) & fg_mask).sum().float()
-                union = fg_mask.sum().float() + (cur_seg_result > 0).sum().float() - correct
-                rpn_iou = correct / torch.clamp(union, min=1.0)
-                rpn_iou_avg += rpn_iou.item()
+                correct = ((cur_seg_result == cur_rpn_cls_label) & fg_mask).sum().astype(ms.float32)
+                union = fg_mask.sum().astype(ms.float32) + (cur_seg_result > 0).sum().astype(ms.float32) - correct
+                
+                rpn_iou = correct / ops.clip_by_value(union,min=ms.Tensor(1.0,ms.float32))
+                rpn_iou_avg += rpn_iou.asnumpy().asnumpy().item()
 
             # save result
             if args.save_rpn_feature:
                 # save features to file
-                save_rpn_features(seg_result[bs_idx].float().cpu().numpy(),
-                                  rpn_scores_raw[bs_idx].float().cpu().numpy(),
+                save_rpn_features(seg_result[bs_idx].astype(ms.float32).asnumpy(),
+                                  rpn_scores_raw[bs_idx].astype(ms.float32).asnumpy(),
                                   pts_features[bs_idx],
-                                  backbone_xyz[bs_idx].cpu().numpy(),
-                                  backbone_features[bs_idx].cpu().numpy().transpose(1, 0),
+                                  backbone_xyz[bs_idx].asnumpy(),
+                                  backbone_features[bs_idx].asnumpy().transpose(1, 0),
                                   kitti_features_dir, cur_sample_id)
 
             if args.save_result or args.save_rpn_feature:
-                cur_pred_cls = cur_seg_result.cpu().numpy()
+                cur_pred_cls = cur_seg_result.asnumpy()
                 output_file = os.path.join(seg_output_dir, '%06d.npy' % cur_sample_id)
                 if not args.test:
-                    cur_gt_cls = cur_rpn_cls_label.cpu().numpy()
+                    cur_gt_cls = cur_rpn_cls_label.asnumpy()
                     output_data = np.concatenate(
                         (cur_pts_rect.reshape(-1, 3), cur_gt_cls.reshape(-1, 1), cur_pred_cls.reshape(-1, 1)), axis=1)
                 else:
@@ -225,7 +230,7 @@ def eval_one_epoch_rpn(model, dataloader, epoch_id, result_dir, logger):
 
                 # save as kitti format
                 calib = dataset.get_calib(cur_sample_id)
-                cur_boxes3d = cur_boxes3d.cpu().numpy()
+                cur_boxes3d = cur_boxes3d.asnumpy()
                 image_shape = dataset.get_image_shape(cur_sample_id)
                 save_kitti_format(cur_sample_id, calib, cur_boxes3d, kitti_output_dir, cur_scores_raw, image_shape)
 
@@ -253,9 +258,9 @@ def eval_one_epoch_rpn(model, dataloader, epoch_id, result_dir, logger):
     return ret_dict
 
 
-def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
+def eval_one_epoch_rcnn(model, dataloader, dataset ,epoch_id, result_dir, logger):
     np.random.seed(1024)
-    MEAN_SIZE = torch.from_numpy(cfg.CLS_MEAN_SIZE[0]).cuda()
+    MEAN_SIZE = ms.Tensor.from_numpy(cfg.CLS_MEAN_SIZE[0]).cuda()
     mode = 'TEST' if args.test else 'EVAL'
 
     final_output_dir = os.path.join(result_dir, 'final_result', 'data')
@@ -273,18 +278,19 @@ def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
     thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
     total_recalled_bbox_list, total_gt_bbox = [0] * 5, 0
     total_roi_recalled_bbox_list = [0] * 5
-    dataset = dataloader.dataset
+    # dataset = dataloader.dataset
     cnt = final_total = total_cls_acc = total_cls_acc_refined = 0
-
-    progress_bar = tqdm.tqdm(total=len(dataloader), leave=True, desc='eval')
-    for data in dataloader:
+    dataloader:ms.dataset.BatchDataset = dataloader
+    
+    progress_bar = tqdm.tqdm(total=dataloader.get_dataset_size(), leave=True, desc='eval')
+    for data in dataloader.create_dict_iterator():
         sample_id = data['sample_id']
         cnt += 1
         assert args.batch_size == 1, 'Only support bs=1 here'
         input_data = {}
         for key, val in data.items():
             if key != 'sample_id':
-                input_data[key] = torch.from_numpy(val).contiguous().cuda(non_blocking=True).float()
+                input_data[key] = val #ms.Tensor.from_numpy(val).astype(ms.float32)
 
         roi_boxes3d = input_data['roi_boxes3d']
         roi_scores = input_data['roi_scores']
@@ -294,7 +300,8 @@ def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
                     continue
                 input_data[key] = input_data[key].expand_dims(axis=0)
         else:
-            pts_input = torch.cat((input_data['pts_input'], input_data['pts_features']), dim=-1)
+
+            pts_input = ops.concat((input_data['pts_input'], input_data['pts_features']), axis=-1)
             input_data['pts_input'] = pts_input
 
         ret_dict = model(input_data)
@@ -319,11 +326,11 @@ def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
         # scoring
         if rcnn_cls.shape[1] == 1:
             raw_scores = rcnn_cls.view(-1)
-            norm_scores = torch.sigmoid(raw_scores)
-            pred_classes = (norm_scores > cfg.RCNN.SCORE_THRESH).long()
+            norm_scores = ops.sigmoid(raw_scores)
+            pred_classes = (norm_scores > cfg.RCNN.SCORE_THRESH).astype(ms.int32)
         else:
-            pred_classes = torch.argmax(rcnn_cls, dim=1).view(-1)
-            cls_norm_scores = F.softmax(rcnn_cls, dim=1)
+            pred_classes = ops.argmax(rcnn_cls, axis=1).view(-1)
+            cls_norm_scores = F.softmax(rcnn_cls, axis=1)
             raw_scores = rcnn_cls[:, pred_classes]
             norm_scores = cls_norm_scores[:, pred_classes]
 
@@ -337,34 +344,34 @@ def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
             gt_num = gt_boxes3d.shape[0]
             if gt_num > 0:
                 iou3d = iou3d_utils.boxes_iou3d_gpu(pred_boxes3d, gt_boxes3d)
-                gt_max_iou, _ = iou3d.max(dim=0)
-                refined_iou, _ = iou3d.max(dim=1)
+                gt_max_iou, _ = iou3d.max(axis=0)
+                refined_iou, _ = iou3d.max(axis=1)
 
                 for idx, thresh in enumerate(thresh_list):
-                    total_recalled_bbox_list[idx] += (gt_max_iou > thresh).sum().item()
-                recalled_num = (gt_max_iou > 0.7).sum().item()
+                    total_recalled_bbox_list[idx] += (gt_max_iou > thresh).sum().asnumpy().item()
+                recalled_num = (gt_max_iou > 0.7).sum().asnumpy().item()
                 total_gt_bbox += gt_num
 
                 iou3d_in = iou3d_utils.boxes_iou3d_gpu(roi_boxes3d, gt_boxes3d)
-                gt_max_iou_in, _ = iou3d_in.max(dim=0)
+                gt_max_iou_in, _ = iou3d_in.max(axis=0)
 
                 for idx, thresh in enumerate(thresh_list):
-                    total_roi_recalled_bbox_list[idx] += (gt_max_iou_in > thresh).sum().item()
+                    total_roi_recalled_bbox_list[idx] += (gt_max_iou_in > thresh).sum().asnumpy().item()
 
             # classification accuracy
-            cls_label = (gt_iou > cfg.RCNN.CLS_FG_THRESH).float()
-            cls_valid_mask = ((gt_iou >= cfg.RCNN.CLS_FG_THRESH) | (gt_iou <= cfg.RCNN.CLS_BG_THRESH)).float()
-            cls_acc = ((pred_classes == cls_label.long()).float() * cls_valid_mask).sum() / max(cls_valid_mask.sum(), 1.0)
+            cls_label = (gt_iou > cfg.RCNN.CLS_FG_THRESH).astype(ms.float32)
+            cls_valid_mask = ((gt_iou >= cfg.RCNN.CLS_FG_THRESH) | (gt_iou <= cfg.RCNN.CLS_BG_THRESH)).astype(ms.float32)
+            cls_acc = ((pred_classes == cls_label.astype(ms.int32)).astype(ms.float32) * cls_valid_mask).sum() / max(cls_valid_mask.sum(), 1.0)
 
             iou_thresh = 0.7 if cfg.CLASSES == 'Car' else 0.5
-            cls_label_refined = (gt_iou >= iou_thresh).float()
-            cls_acc_refined = (pred_classes == cls_label_refined.long()).float().sum() / max(cls_label_refined.shape[0], 1.0)
+            cls_label_refined = (gt_iou >= iou_thresh).astype(ms.float32)
+            cls_acc_refined = (pred_classes == cls_label_refined.astype(ms.int32)).astype(ms.float32).sum() / max(cls_label_refined.shape[0], 1.0)
 
-            total_cls_acc += cls_acc.item()
-            total_cls_acc_refined += cls_acc_refined.item()
+            total_cls_acc += cls_acc.asnumpy().item()
+            total_cls_acc_refined += cls_acc_refined.asnumpy().item()
 
             disp_dict['recall'] = '%d/%d' % (total_recalled_bbox_list[3], total_gt_bbox)
-            disp_dict['cls_acc_refined'] = '%.2f' % cls_acc_refined.item()
+            disp_dict['cls_acc_refined'] = '%.2f' % cls_acc_refined.asnumpy().item()
 
         progress_bar.set_postfix(disp_dict)
         progress_bar.update()
@@ -372,12 +379,12 @@ def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
         image_shape = dataset.get_image_shape(sample_id)
         if args.save_result:
             # save roi and refine results
-            roi_boxes3d_np = roi_boxes3d.cpu().numpy()
-            pred_boxes3d_np = pred_boxes3d.cpu().numpy()
+            roi_boxes3d_np = roi_boxes3d.asnumpy()
+            pred_boxes3d_np = pred_boxes3d.asnumpy()
             calib = dataset.get_calib(sample_id)
 
             save_kitti_format(sample_id, calib, roi_boxes3d_np, roi_output_dir, roi_scores, image_shape)
-            save_kitti_format(sample_id, calib, pred_boxes3d_np, refine_output_dir, raw_scores.cpu().numpy(),
+            save_kitti_format(sample_id, calib, pred_boxes3d_np, refine_output_dir, raw_scores.asnumpy(),
                               image_shape)
 
         # NMS and scoring
@@ -395,7 +402,7 @@ def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
         pred_boxes3d_selected = pred_boxes3d_selected[keep_idx]
 
         scores_selected = raw_scores_selected[keep_idx]
-        pred_boxes3d_selected, scores_selected = pred_boxes3d_selected.cpu().numpy(), scores_selected.cpu().numpy()
+        pred_boxes3d_selected, scores_selected = pred_boxes3d_selected.asnumpy(), scores_selected.asnumpy()
 
         calib = dataset.get_calib(sample_id)
         final_total += pred_boxes3d_selected.shape[0]
@@ -456,9 +463,9 @@ def eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger):
     return ret_dict
 
 
-def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
-    np.random.seed(666)
-    MEAN_SIZE = torch.from_numpy(cfg.CLS_MEAN_SIZE[0]).cuda()
+def eval_one_epoch_joint(model, dataloader,dataset, epoch_id, result_dir, logger):
+    # np.random.seed(666)
+    MEAN_SIZE = ms.Tensor.from_numpy(cfg.CLS_MEAN_SIZE[0])
     mode = 'TEST' if args.test else 'EVAL'
 
     final_output_dir = os.path.join(result_dir, 'final_result', 'data')
@@ -474,21 +481,23 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
 
     logger.info('---- EPOCH %s JOINT EVALUATION ----' % epoch_id)
     logger.info('==> Output file: %s' % result_dir)
-    model.eval()
+    # model.eval()
 
     thresh_list = [0.1, 0.3, 0.5, 0.7, 0.9]
     total_recalled_bbox_list, total_gt_bbox = [0] * 5, 0
     total_roi_recalled_bbox_list = [0] * 5
-    dataset = dataloader.dataset
+    # dataset = dataloader.dataset
     cnt = final_total = total_cls_acc = total_cls_acc_refined = total_rpn_iou = 0
+    dataloader:ms.dataset.BatchDataset = dataloader
 
-    progress_bar = tqdm.tqdm(total=len(dataloader), leave=True, desc='eval')
-    for data in dataloader:
+    progress_bar = tqdm.tqdm(total=dataloader.get_dataset_size(), leave=True, desc='eval')
+    it = dataloader.create_dict_iterator()
+    for data in it:
         cnt += 1
         sample_id, pts_rect, pts_features, pts_input = \
             data['sample_id'], data['pts_rect'], data['pts_features'], data['pts_input']
         batch_size = len(sample_id)
-        inputs = torch.from_numpy(pts_input).cuda(non_blocking=True).float()
+        inputs = pts_input.astype(ms.float32)
         input_data = {'pts_input': inputs}
 
         # model inference
@@ -496,7 +505,7 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
 
         roi_scores_raw = ret_dict['roi_scores_raw']  # (B, M)
         roi_boxes3d = ret_dict['rois']  # (B, M, 7)
-        seg_result = ret_dict['seg_result'].long()  # (B, N)
+        seg_result = ret_dict['seg_result'].astype(ms.int32)  # (B, N)
 
         rcnn_cls = ret_dict['rcnn_cls'].view(batch_size, -1, ret_dict['rcnn_cls'].shape[1])
         rcnn_reg = ret_dict['rcnn_reg'].view(batch_size, -1, ret_dict['rcnn_reg'].shape[1])  # (B, M, C)
@@ -519,11 +528,11 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
         if rcnn_cls.shape[2] == 1:
             raw_scores = rcnn_cls  # (B, M, 1)
 
-            norm_scores = torch.sigmoid(raw_scores)
-            pred_classes = (norm_scores > cfg.RCNN.SCORE_THRESH).long()
+            norm_scores = ops.sigmoid(raw_scores)
+            pred_classes = (norm_scores > cfg.RCNN.SCORE_THRESH).astype(ms.int32)
         else:
-            pred_classes = torch.argmax(rcnn_cls, dim=1).view(-1)
-            cls_norm_scores = F.softmax(rcnn_cls, dim=1)
+            pred_classes = ops.argmax(rcnn_cls, axis=1).view(-1)
+            cls_norm_scores = F.softmax(rcnn_cls, axis=1)
             raw_scores = rcnn_cls[:, pred_classes]
             norm_scores = cls_norm_scores[:, pred_classes]
 
@@ -532,7 +541,7 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
         if not args.test:
             if not cfg.RPN.FIXED:
                 rpn_cls_label, rpn_reg_label = data['rpn_cls_label'], data['rpn_reg_label']
-                rpn_cls_label = torch.from_numpy(rpn_cls_label).cuda(non_blocking=True).long()
+                rpn_cls_label = ms.Tensor.from_numpy(rpn_cls_label).astype(ms.int32)
 
             gt_boxes3d = data['gt_boxes3d']
 
@@ -547,30 +556,33 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
                 if tmp_idx >= 0:
                     cur_gt_boxes3d = cur_gt_boxes3d[:tmp_idx + 1]
 
-                    cur_gt_boxes3d = torch.from_numpy(cur_gt_boxes3d).cuda(non_blocking=True).float()
+                    cur_gt_boxes3d = cur_gt_boxes3d.astype(ms.float32)
                     iou3d = iou3d_utils.boxes_iou3d_gpu(pred_boxes3d[k], cur_gt_boxes3d)
-                    gt_max_iou, _ = iou3d.max(dim=0)
-                    refined_iou, _ = iou3d.max(dim=1)
+                    ops.ArgMaxWithValue(0)(iou3d)
+                    _, gt_max_iou = ops.ArgMaxWithValue(0)(iou3d)
+                    _, refined_iou = ops.ArgMaxWithValue(1)(iou3d)
 
                     for idx, thresh in enumerate(thresh_list):
-                        total_recalled_bbox_list[idx] += (gt_max_iou > thresh).sum().item()
-                    recalled_num += (gt_max_iou > 0.7).sum().item()
+                        total_recalled_bbox_list[idx] += (gt_max_iou > thresh).sum().asnumpy().item()
+                    recalled_num += (gt_max_iou > 0.7).sum().asnumpy().item()
                     gt_num += cur_gt_boxes3d.shape[0]
                     total_gt_bbox += cur_gt_boxes3d.shape[0]
 
                     # original recall
                     iou3d_in = iou3d_utils.boxes_iou3d_gpu(roi_boxes3d[k], cur_gt_boxes3d)
-                    gt_max_iou_in, _ = iou3d_in.max(dim=0)
+                    # gt_max_iou_in, _ = iou3d_in.max(axis=0)
+                    _, gt_max_iou_in = ops.ArgMaxWithValue(0)(iou3d_in)
 
                     for idx, thresh in enumerate(thresh_list):
-                        total_roi_recalled_bbox_list[idx] += (gt_max_iou_in > thresh).sum().item()
+                        total_roi_recalled_bbox_list[idx] += (gt_max_iou_in > thresh).sum().asnumpy().item()
 
                 if not cfg.RPN.FIXED:
                     fg_mask = rpn_cls_label > 0
-                    correct = ((seg_result == rpn_cls_label) & fg_mask).sum().float()
-                    union = fg_mask.sum().float() + (seg_result > 0).sum().float() - correct
-                    rpn_iou = correct / torch.clamp(union, min=1.0)
-                    total_rpn_iou += rpn_iou.item()
+                    correct = ((seg_result == rpn_cls_label) & fg_mask).sum().astype(ms.float32)
+                    union = fg_mask.sum().astype(ms.float32) + (seg_result > 0).sum().astype(ms.float32) - correct
+                    # rpn_iou = correct / torch.clamp(union, min=1.0)
+                    rpn_iou = correct / ops.clip_by_value(union, min=ms.Tensor(1.0,ms.float32))
+                    total_rpn_iou += rpn_iou.asnumpy().item()
 
         disp_dict = {'mode': mode, 'recall': '%d/%d' % (total_recalled_bbox_list[3], total_gt_bbox)}
         progress_bar.set_postfix(disp_dict)
@@ -578,14 +590,14 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
 
         if args.save_result:
             # save roi and refine results
-            roi_boxes3d_np = roi_boxes3d.cpu().numpy()
-            pred_boxes3d_np = pred_boxes3d.cpu().numpy()
-            roi_scores_raw_np = roi_scores_raw.cpu().numpy()
-            raw_scores_np = raw_scores.cpu().numpy()
+            roi_boxes3d_np = roi_boxes3d.asnumpy()
+            pred_boxes3d_np = pred_boxes3d.asnumpy()
+            roi_scores_raw_np = roi_scores_raw.asnumpy()
+            raw_scores_np = raw_scores.asnumpy()
 
-            rpn_cls_np = ret_dict['rpn_cls'].cpu().numpy()
-            rpn_xyz_np = ret_dict['backbone_xyz'].cpu().numpy()
-            seg_result_np = seg_result.cpu().numpy()
+            rpn_cls_np = ret_dict['rpn_cls'].asnumpy()
+            rpn_xyz_np = ret_dict['backbone_xyz'].asnumpy()
+            seg_result_np = seg_result.asnumpy()
             output_data = np.concatenate((rpn_xyz_np, rpn_cls_np.reshape(batch_size, -1, 1),
                                           seg_result_np.reshape(batch_size, -1, 1)), axis=2)
 
@@ -608,18 +620,27 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
             cur_inds = inds[k].view(-1)
             if cur_inds.sum() == 0:
                 continue
-
-            pred_boxes3d_selected = pred_boxes3d[k, cur_inds]
-            raw_scores_selected = raw_scores[k, cur_inds]
-            norm_scores_selected = norm_scores[k, cur_inds]
+            
+            # ms.Tensor.expand_dims()
+            # pred_boxes3d_selected = pred_boxes3d[k, cur_inds]
+            # raw_scores_selected = raw_scores[k, cur_inds]
+            # norm_scores_selected = norm_scores[k, cur_inds]
+            temp = pred_boxes3d.shape[-1]
+            pred_boxes3d_selected = pred_boxes3d[k].masked_select(cur_inds.expand_dims(-1)).reshape((-1,temp))
+            temp = pred_boxes3d.shape[-1]
+            raw_scores_selected = raw_scores[k].masked_select(cur_inds.expand_dims(-1))
+            temp = pred_boxes3d.shape[-1]
+            norm_scores_selected = norm_scores[k].masked_select(cur_inds.expand_dims(-1))
 
             # NMS thresh
             # rotated nms
             boxes_bev_selected = kitti_utils.boxes3d_to_bev_torch(pred_boxes3d_selected)
+            boxes_bev_selected = ms.Tensor.from_numpy(boxes_bev_selected.asnumpy()) 
+            raw_scores_selected = ms.Tensor.from_numpy(raw_scores_selected.asnumpy()) 
             keep_idx = iou3d_utils.nms_gpu(boxes_bev_selected, raw_scores_selected, cfg.RCNN.NMS_THRESH).view(-1)
             pred_boxes3d_selected = pred_boxes3d_selected[keep_idx]
             scores_selected = raw_scores_selected[keep_idx]
-            pred_boxes3d_selected, scores_selected = pred_boxes3d_selected.cpu().numpy(), scores_selected.cpu().numpy()
+            pred_boxes3d_selected, scores_selected = pred_boxes3d_selected.asnumpy(), scores_selected.asnumpy()
 
             cur_sample_id = sample_id[k]
             calib = dataset.get_calib(cur_sample_id)
@@ -683,13 +704,13 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
     return ret_dict
 
 
-def eval_one_epoch(model, dataloader, epoch_id, result_dir, logger):
+def eval_one_epoch(model, dataloader, dataset, epoch_id, result_dir, logger):
     if cfg.RPN.ENABLED and not cfg.RCNN.ENABLED:
         ret_dict = eval_one_epoch_rpn(model, dataloader, epoch_id, result_dir, logger)
     elif not cfg.RPN.ENABLED and cfg.RCNN.ENABLED:
-        ret_dict = eval_one_epoch_rcnn(model, dataloader, epoch_id, result_dir, logger)
+        ret_dict = eval_one_epoch_rcnn(model, dataloader, dataset, epoch_id, result_dir, logger)
     elif cfg.RPN.ENABLED and cfg.RCNN.ENABLED:
-        ret_dict = eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger)
+        ret_dict = eval_one_epoch_joint(model, dataloader,dataset, epoch_id, result_dir, logger)
     else:
         raise NotImplementedError
     return ret_dict
@@ -717,12 +738,15 @@ def load_part_ckpt(model, filename, logger, total_keys=-1):
 def load_ckpt_based_on_args(model, logger):
     if args.ckpt is not None:
         train_utils.load_checkpoint(model, filename=args.ckpt, logger=logger)
+        return 
 
     total_keys = model.state_dict().keys().__len__()
     if cfg.RPN.ENABLED and args.rpn_ckpt is not None:
+        # false
         load_part_ckpt(model, filename=args.rpn_ckpt, logger=logger, total_keys=total_keys)
 
     if cfg.RCNN.ENABLED and args.rcnn_ckpt is not None:
+        # false
         load_part_ckpt(model, filename=args.rcnn_ckpt, logger=logger, total_keys=total_keys)
 
 
@@ -747,9 +771,9 @@ def eval_single_ckpt(root_result_dir):
     save_config_to_file(cfg, logger=logger)
 
     # create dataloader & network
-    test_loader = create_dataloader(logger)
-    model = PointRCNN(num_classes=test_loader.dataset.num_class, use_xyz=True, mode='TEST')
-    model.cuda()
+    test_loader, test_dataset, num_class = create_dataloader(logger)
+    model = PointRCNN(num_classes=num_class, use_xyz=True, mode='TEST')
+    # model.cuda()
 
     # copy important files to backup
     backup_dir = os.path.join(root_result_dir, 'backup_files')
@@ -762,7 +786,7 @@ def eval_single_ckpt(root_result_dir):
     load_ckpt_based_on_args(model, logger)
 
     # start evaluation
-    eval_one_epoch(model, test_loader, epoch_id, root_result_dir, logger)
+    eval_one_epoch(model, test_loader,test_dataset, epoch_id, root_result_dir, logger)
 
 
 def get_no_evaluated_ckpt(ckpt_dir, ckpt_record_file):
@@ -852,11 +876,12 @@ def create_dataloader(logger):
                                 rcnn_eval_feature_dir=args.rcnn_eval_feature_dir,
                                 classes=cfg.CLASSES,
                                 logger=logger)
+    cols = test_set.getitem_cols(0)
+    test_loader = ms.dataset.GeneratorDataset(test_set, num_parallel_workers=1, column_names=cols, shuffle=False)
+    test_batch_loader = test_loader.batch(args.batch_size,drop_remainder=True,num_parallel_workers=4,per_batch_map=batchpad(cols=cols),python_multiprocessing=True)
+    #test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, pin_memory=True,num_workers=args.workers, collate_fn=test_set.collate_batch)
 
-    test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, pin_memory=True,
-                             num_workers=args.workers, collate_fn=test_set.collate_batch)
-
-    return test_loader
+    return test_batch_loader,test_set, test_set.num_class
 
 
 if __name__ == "__main__":
@@ -893,10 +918,16 @@ if __name__ == "__main__":
         root_result_dir = args.output_dir
 
     os.makedirs(root_result_dir, exist_ok=True)
-
-    with torch.no_grad():
-        if args.eval_all:
-            assert os.path.exists(ckpt_dir), '%s' % ckpt_dir
-            repeat_eval_ckpt(root_result_dir, ckpt_dir)
-        else:
-            eval_single_ckpt(root_result_dir)
+    # logger = logging.getLogger()
+    # test_loader,test_dataset, num_class = create_dataloader(logger)
+    # model = PointRCNN(num_classes=num_class, use_xyz=True, mode='TEST')
+    # print("loading ckpt ... ")
+    # load_ckpt_based_on_args(model, logger)
+    # print("load finished")
+    # exit()
+    # with torch.no_grad():
+    if args.eval_all:
+        assert os.path.exists(ckpt_dir), '%s' % ckpt_dir
+        repeat_eval_ckpt(root_result_dir, ckpt_dir)
+    else:
+        eval_single_ckpt(root_result_dir)

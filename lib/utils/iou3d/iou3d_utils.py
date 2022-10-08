@@ -69,7 +69,7 @@ def boxes_iou3d_gpu(boxes_a, boxes_b):
 
     return iou3d
 
-nms_gpu_op = get_func_from_so(so_name,"nms_gpu",out_shape=(1,),out_dtype=ms.int32)
+
 def nms_gpu(boxes, scores, thresh):
     """
     :param boxes: (N, 5) [x1, y1, x2, y2, ry]
@@ -87,6 +87,7 @@ def nms_gpu(boxes, scores, thresh):
     keep = ms.numpy.zeros((boxes.shape[0]),ms.int64)
     num_out:ms.Tensor = ms.numpy.zeros((1), ms.int32)
     # num_out = iou3d_cuda.nms_gpu(boxes, keep, thresh)
+    nms_gpu_op = get_func_from_so(so_name,"nms_gpu",out_shape=(1,),out_dtype=ms.int32)
     num_out = nms_gpu_op(boxes, keep, thresh)
     num_out = num_out.asnumpy().item()
     return order[keep[:num_out]]

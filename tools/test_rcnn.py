@@ -6,9 +6,9 @@
 # from torch.utils.data import DataLoader
 import _init_path
 import mindspore as ms
-from mindspore import nn, ops, Model
-from mindspore import load_checkpoint
-import numpy
+from mindspore import Tensor, nn, ops, Model
+from mindspore import load_checkpoint, load_param_into_net
+import numpy as np
 # from tensorboardX import SummaryWriter
 import os
 import argparse
@@ -260,12 +260,10 @@ if __name__ == "__main__":
     
     train_loader, test_loader,num_class = create_dataloader(logger,args=args)
     total_step = train_loader.get_dataset_size() * args.epochs
+
     net = PointRCNN(num_classes=num_class,
                     use_xyz=True,
-                    mode='TRAIN')
-    for name,parma in net.parameters_and_names():
-        print(name,parma.shape)
-    exit()
+                    mode='TEST')
     loss_net = net_with_loss(net,train_loader.get_col_names())
     
     # @TODO 学习率曲线未设置
@@ -273,7 +271,7 @@ if __name__ == "__main__":
     #                                               batchs_in_epoch=train_loader.get_dataset_size())
     optimizer = create_optimizer(net)
     # optimizer.learning_rate = lr_scheduler
-    model = Model(loss_net,loss_fn=None,optimizer=optimizer)
+    # model = Model(loss_net,loss_fn=None,optimizer=optimizer)
     # load checkpoint if it is possible
     start_epoch = it = 0
     last_epoch = -1
@@ -331,5 +329,27 @@ if __name__ == "__main__":
     #     ckpt_save_interval=args.ckpt_save_interval,
     #     lr_scheduler_each_iter=(cfg.TRAIN.OPTIMIZER == 'adam_onecycle'))
 
-    model.train(args.epochs,train_loader,cb,dataset_sink_mode=False)
+    # model.train(args.epochs,train_loader,cb,dataset_sink_mode=False)
     logger.info('**********************End training**********************')
+    # for name, param in net.parameters_and_names():
+    #     print(name, param.shape)
+    params = load_checkpoint('../PointRCNN.ckpt')
+    load_param_into_net(net, params)
+    net.set_train(False)
+
+    for name, param in net.parameters_and_names():
+        print(name, param.mean(), param.max())
+        break
+
+    np.random.seed(66)
+    inputs = np.random.randn(1, 16384, 3)
+    inputs = Tensor(inputs, dtype=ms.float32)
+    print('inputs: ', inputs.mean())
+    ret_dict = net({'pts_input': inputs})
+    
+    roi_scores_raw = ret_dict['roi_scores_raw']  # (B, M)
+    roi_boxes3d = ret_dict['rois']  # (B, M, 7)
+    seg_result = ret_dict['seg_result']
+
+    print(roi_scores_raw.mean())
+    print(roi_boxes3d.mean())

@@ -20,6 +20,8 @@ int ball_query_wrapper_fast(int b, int n, int m, float radius, int nsample,
     const float *new_xyz = new_xyz_tensor.data_ptr<float>();
     const float *xyz = xyz_tensor.data_ptr<float>();
     int *idx = idx_tensor.data_ptr<int>();
+    cudaMemset(idx, 0, b*m*nsample*sizeof(int));
+    //      idx: (B, M, nsample)
     
     // cudaStream_t stream = THCState_getCurrentStream(state);
     cudaStream_t stream = at::cuda::getCurrentCUDAStream();

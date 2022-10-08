@@ -99,11 +99,11 @@ def get_reg_loss(pred_reg, reg_label,mask, loc_scope, loc_bin_size, num_head_bin
                  get_xz_fine=True, get_y_by_bin=False, loc_y_scope=0.5, loc_y_bin_size=0.25, get_ry_fine=False):
     _pred = pred_reg*mask.expand_dims(-1)
     _reg_label = reg_label*mask.expand_dims(-1)
-    return get_reg_loss_ori(_pred, _reg_label,mask, loc_scope, loc_bin_size, num_head_bin, anchor_size,
+    return get_reg_loss_ori(pred_reg, reg_label, mask, loc_scope, loc_bin_size, num_head_bin, anchor_size,
                  get_xz_fine=True, get_y_by_bin=False, loc_y_scope=0.5, loc_y_bin_size=0.25, get_ry_fine=False)
 
 
-def get_reg_loss_ori(pred_reg, reg_label,mask, loc_scope, loc_bin_size, num_head_bin, anchor_size,
+def get_reg_loss_ori(pred_reg, reg_label, mask, loc_scope, loc_bin_size, num_head_bin, anchor_size,
                  get_xz_fine=True, get_y_by_bin=False, loc_y_scope=0.5, loc_y_bin_size=0.25, get_ry_fine=False):
 
     """
@@ -122,7 +122,7 @@ def get_reg_loss_ori(pred_reg, reg_label,mask, loc_scope, loc_bin_size, num_head
     :param get_ry_fine:
     :return:
     """
-    # assert ops.Shape()(pred_reg)[-1] > 0
+    assert ops.Shape()(pred_reg)[-1] > 0
     per_loc_bin_num = int(loc_scope / loc_bin_size) * 2
     loc_y_bin_num = int(loc_y_scope / loc_y_bin_size) * 2
 
@@ -161,13 +161,14 @@ def get_reg_loss_ori(pred_reg, reg_label,mask, loc_scope, loc_bin_size, num_head
     # TODO 用mask覆盖交叉熵结果然后求mean
     loss_x_bin,_ = op(t1, ops.one_hot(x_bin_label,t1.shape[-1],ms.Tensor(1.0,ms.float32),ms.Tensor(0,ms.float32)))
     loss_z_bin,_ = op(t2,ops.one_hot(z_bin_label,t2.shape[-1],ms.Tensor(1.0,ms.float32),ms.Tensor(0,ms.float32)))
-    loss_x_bin = (loss_x_bin*mask).mean()
-    loss_z_bin = (loss_z_bin*mask).mean()
+    
+    loss_x_bin = ops.masked_select(loss_x_bin,mask).mean()
+    loss_z_bin = ops.masked_select(loss_z_bin,mask).mean()
 
     reg_loss_dict['loss_x_bin'] = loss_x_bin.asnumpy()
     reg_loss_dict['loss_z_bin'] = loss_z_bin.asnumpy()
     loc_loss += loss_x_bin + loss_z_bin
-    smooth_l1_loss = mnn.SmoothL1Loss(reduction='mean')
+    smooth_l1_loss = mnn.SmoothL1Loss(reduction='none')
     if get_xz_fine:
         x_res_l, x_res_r = per_loc_bin_num * 2, per_loc_bin_num * 3
         z_res_l, z_res_r = per_loc_bin_num * 3, per_loc_bin_num * 4
@@ -192,9 +193,8 @@ def get_reg_loss_ori(pred_reg, reg_label,mask, loc_scope, loc_bin_size, num_head
         z_bin_onehot = ops.functional.tensor_scatter_elements(z_bin_onehot,z,ms.numpy.ones(z.shape),axis=1)
 
 
-        
-        loss_x_res:ms.Tensor = smooth_l1_loss((pred_reg[:, x_res_l: x_res_r] * x_bin_onehot).sum(1), x_res_norm_label)
-        loss_z_res:ms.Tensor = smooth_l1_loss((pred_reg[:, z_res_l: z_res_r] * z_bin_onehot).sum(1), z_res_norm_label)
+        loss_x_res:ms.Tensor = smooth_l1_loss((pred_reg[:, x_res_l: x_res_r] * x_bin_onehot).sum(1), x_res_norm_label).masked_select(mask).mean()
+        loss_z_res:ms.Tensor = smooth_l1_loss((pred_reg[:, z_res_l: z_res_r] * z_bin_onehot).sum(1), z_res_norm_label).masked_select(mask).mean()
         reg_loss_dict['loss_x_res'] = loss_x_res.asnumpy()
         reg_loss_dict['loss_z_res'] = loss_z_res.asnumpy()
         loc_loss += loss_x_res + loss_z_res
@@ -220,7 +220,7 @@ def get_reg_loss_ori(pred_reg, reg_label,mask, loc_scope, loc_bin_size, num_head
 
 
         loss_y_bin:ms.Tensor = cross_entropy(pred_reg[:, y_bin_l: y_bin_r], y_bin_label)
-        loss_y_res:ms.Tensor = smooth_l1_loss((pred_reg[:, y_res_l: y_res_r] * y_bin_onehot).sum(1), y_res_norm_label)
+        loss_y_res:ms.Tensor = smooth_l1_loss((pred_reg[:, y_res_l: y_res_r] * y_bin_onehot).sum(1), y_res_norm_label).masked_select(mask).mean()
 
         reg_loss_dict['loss_y_bin'] = loss_y_bin.asnumpy()
         reg_loss_dict['loss_y_res'] = loss_y_res.asnumpy()
@@ -230,7 +230,7 @@ def get_reg_loss_ori(pred_reg, reg_label,mask, loc_scope, loc_bin_size, num_head
         y_offset_l, y_offset_r = start_offset, start_offset + 1
         start_offset = y_offset_r
 
-        loss_y_offset:ms.Tensor = smooth_l1_loss(pred_reg[:, y_offset_l: y_offset_r].sum(1), y_offset_label)
+        loss_y_offset:ms.Tensor = smooth_l1_loss(pred_reg[:, y_offset_l: y_offset_r].sum(1), y_offset_label).masked_select(mask).mean()
         reg_loss_dict['loss_y_offset'] = loss_y_offset.asnumpy()
         loc_loss += loss_y_offset
 
@@ -277,19 +277,22 @@ def get_reg_loss_ori(pred_reg, reg_label,mask, loc_scope, loc_bin_size, num_head
     ry_bin_onehot = ops.functional.tensor_scatter_elements(ry_bin_onehot,ry,ms.numpy.ones(ry.shape),axis=1)
     
     loss_ry_bin = cross_entropy(pred_reg[:, ry_bin_l:ry_bin_r], ry_bin_label)
-    loss_ry_res = smooth_l1_loss((pred_reg[:, ry_res_l: ry_res_r] * ry_bin_onehot).sum(axis=1), ry_res_norm_label)
+    # pred_reg.gather(ms.numpy.arange(z_bin_l,z_bin_r),1)
+    # loss_ry_res = smooth_l1_loss((pred_reg[:, ry_res_l: ry_res_r] * ry_bin_onehot).sum(axis=1), ry_res_norm_label)
+    loss_ry_res = smooth_l1_loss((pred_reg.gather(ms.numpy.arange(ry_res_l,ry_res_r),1) * ry_bin_onehot).sum(axis=1), ry_res_norm_label).masked_select(mask).mean()
 
     reg_loss_dict['loss_ry_bin'] = loss_ry_bin.asnumpy()
     reg_loss_dict['loss_ry_res'] = loss_ry_res.asnumpy()
     angle_loss = loss_ry_bin + loss_ry_res
 
     # size loss
-    size_res_l, size_res_r = ry_res_r, ry_res_r + 3
+    size_res_l, size_res_r = ry_res_r - 2*num_head_bin, ry_res_r + 3 - 2*num_head_bin
     assert pred_reg.shape[1] == size_res_r, '%d vs %d' % (pred_reg.shape[1], size_res_r)
-
+    # reg_label.gather(ms.numpy.arange(3,6),1)
     size_res_norm_label = (reg_label[:, 3:6] - anchor_size) / anchor_size
-    size_res_norm = pred_reg[:, size_res_l:size_res_r]
-    size_loss = smooth_l1_loss(size_res_norm, size_res_norm_label)
+    print(ops.Shape()(pred_reg))
+    size_res_norm = pred_reg.gather(ms.numpy.arange(size_res_l,size_res_r),1)
+    size_loss = smooth_l1_loss(size_res_norm, size_res_norm_label).mean(1).masked_select(mask).mean()
 
     # Total regression loss
     reg_loss_dict['loss_loc'] = loc_loss

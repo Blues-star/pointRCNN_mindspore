@@ -20,7 +20,7 @@ def rotate_pc_along_y_torch(pc, rot_angle):
     raw_1 = cat([cosa, -sina])
     raw_2 = cat([sina, cosa])
     # R = cat((raw_1.unsqueeze(dim=1), raw_2.unsqueeze(dim=1)), dim=1)  # (N, 2, 2)
-    R = cat((unsqueeze(raw_1, 1), unsqueeze(raw_2, 1)), dim=1)  # (N, 2, 2)
+    R = cat((unsqueeze(raw_1, 1), unsqueeze(raw_2, 1)))  # (N, 2, 2)
     pc_temp = unsqueeze(pc[:, [0, 2]], 1)  # (N, 1, 2)
 
     pc[:, [0, 2]] = ops.matmul(pc_temp, transpose(R, (0, 2, 1))).squeeze(1)

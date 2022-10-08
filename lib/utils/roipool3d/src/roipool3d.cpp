@@ -64,6 +64,7 @@ int roipool3d_gpu(at::Tensor xyz, at::Tensor boxes3d, at::Tensor pts_feature, at
     int boxes_num = boxes3d.size(1);
     int feature_in_len = pts_feature.size(2);
     int sampled_pts_num = pooled_features.size(2);
+    int c = feature_in_len;
 
 
     const float * xyz_data = xyz.data<float>();
@@ -71,6 +72,8 @@ int roipool3d_gpu(at::Tensor xyz, at::Tensor boxes3d, at::Tensor pts_feature, at
     const float * pts_feature_data = pts_feature.data<float>();
     float * pooled_features_data = pooled_features.data<float>();
     int * pooled_empty_flag_data = pooled_empty_flag.data<int>();
+
+    
 
     roipool3dLauncher(batch_size, pts_num, boxes_num, feature_in_len, sampled_pts_num, 
                        xyz_data, boxes3d_data, pts_feature_data, pooled_features_data, pooled_empty_flag_data);

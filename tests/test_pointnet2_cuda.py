@@ -4,14 +4,17 @@ import mindspore as ms
 from mindspore import nn,ops
 import sys
 from pathlib import Path
-
+import numpy as np
+import torch
+from torch.autograd import Function
+import pointnet2_cuda as pointnet2
 
 sys.path.insert(0, Path(__file__).parent.parent.absolute().__str__())
 # sys.path.insert(0, '../../')
 print(sys.path)
 ms.context.set_context(device_target="GPU")
 ms.context.set_context(mode=ms.PYNATIVE_MODE)
-import lib.utils.layer_utils as layer_utils
+import tools.layer_utils as layer_utils
 from lib.utils.roipool3d.roipool3d_utils import roipool3d_gpu,pts_in_boxes3d_cpu, roipool_pc_cpu
 from lib.utils.iou3d.iou3d_utils import boxes_iou3d_gpu, boxes_iou_bev, nms_gpu, nms_normal_gpu
 # from lib.net.layer_utils import ThreeNN
@@ -158,15 +161,19 @@ def test_nms_normal_gpu():
     print(ans.shape)
 
 def test_grouping_operation():
-    B = 2
     C = 3
+    B = 2
     N = 2048
     npoint = 4096
     nsample = 16
-    features = ms.numpy.rand((B,C,N))
-    idx = ms.numpy.randint(1,10,(B,npoint,nsample))
-    output = layer_utils.grouping_operation(features,idx)
-    print(output.shape)
+    features = np.random.rand((B,C,N))
+    idx = np.random.randint(1,10,(B,npoint,nsample))
+    _features = ms.Tensor.from_numpy(features)
+    _idx = ms.Tensor.from_numpy(idx)
+    output = layer_utils.grouping_operation(_features,_idx)
+    print(output.shape,output.mean(),output.std())
+
+
 
 
 def test_GatherOperation():
@@ -186,6 +193,33 @@ def test_GatherOperation():
     out = op(features,idx)
     print(out.shape)
 
+class BallQuery(Function):
+
+    @staticmethod
+    def forward(ctx, radius: float, nsample: int, xyz: torch.Tensor, new_xyz: torch.Tensor) -> torch.Tensor:
+        """
+        :param ctx:
+        :param radius: float, radius of the balls
+        :param nsample: int, maximum number of features in the balls
+        :param xyz: (B, N, 3) xyz coordinates of the features
+        :param new_xyz: (B, npoint, 3) centers of the ball query
+        :return:
+            idx: (B, npoint, nsample) tensor with the indicies of the features that form the query balls
+        """
+        assert new_xyz.is_contiguous()
+        assert xyz.is_contiguous()
+
+        B, N, _ = xyz.size()
+        npoint = new_xyz.size(1)
+        idx = torch.cuda.IntTensor(B, npoint, nsample).zero_()
+
+        pointnet2.ball_query_wrapper(B, N, npoint, radius, nsample, new_xyz, xyz, idx)
+        return idx
+
+    @staticmethod
+    def backward(ctx, a=None):
+        return None, None, None, None
+
 
 def test_GroupingOperation():
     """
@@ -195,15 +229,21 @@ def test_GroupingOperation():
     :return:
         output: (B, C, npoint, nsample) tensor
     """
+    np.random.seed(1024)
     B = 2
     C = 1
     N = 128
     npoint = 4096
     nsample = 16
-    features = ms.numpy.rand((B, C, N))
-    idx = ms.numpy.randint(1,10,(B, npoint,nsample))
+    
+    t1 = np.random.rand(B, C, N)
+    t2 = np.random.randint(1,10,size=(B, npoint,nsample))
+    print(t1.mean(),t1.std(),t2.mean(),t2.std())
+    features = ms.Tensor.from_numpy(t1).astype(ms.float32)
+    idx = ms.Tensor.from_numpy(t2).astype(ms.int32)
+    print(features.mean(),features.std())
     output= layer_utils.grouping_operation(features,idx)
-    print(output.shape)
+    print(output.shape,output.mean(),output.std())
 
 def test_BallQuery():
     """
@@ -214,59 +254,74 @@ def test_BallQuery():
     :return:
         idx: (B, npoint, nsample) tensor with the indicies of the features that form the query balls
     """
-    radius = 0.5
-    nsample = 64
-    xyz = ms.numpy.rand(16,512,3)
-    new_xyz = ms.numpy.rand(16,256,3)
-    idx = layer_utils.ball_query(radius,nsample,xyz,new_xyz)
-    print(idx.shape)
+    np.random.seed(1024)
+    with open("cuda.log","w") as e:
+        for i in range(5):
+            radius = 0.1*(i+1)
+            nsample = 6*(i+1)
+            t1 = np.random.rand(16,512,3).astype(np.float32)
+            t2 = np.random.rand(16,256,3).astype(np.float32)
+            print('ms_t1: ', t1.mean(), 'ms_t2: ', t2.mean(),file=e)
+            xyz = ms.Tensor.from_numpy(t1).astype(ms.float32)
+            new_xyz = ms.Tensor.from_numpy(t2).astype(ms.float32)
+            ball_query = layer_utils.BallQuery()
+            idx = ball_query(radius, nsample, xyz, new_xyz)
+            print("ms_res: ", idx.shape, idx.sum() / len(idx), ops.count_nonzero(idx),file=e)
+
+            # B, N, _ = xyz.shape
+            npoint = new_xyz.shape[1]
+            # idx = torch.cuda.IntTensor(B, npoint, nsample).zero_()
+            torch_t1 = torch.from_numpy(t1).cuda()
+            torch_t2 = torch.from_numpy(t2).cuda()
+            print('torch_t1: ', torch_t1.mean(), 'torch_t2: ', torch_t2.mean(),file=e)
+            torch_ball_query = BallQuery.apply
+            idx = torch_ball_query(radius, nsample, torch_t1, torch_t2)
+            # pointnet2.ball_query_wrapper(B, N, npoint, radius, nsample, torch_t2, torch_t1, idx)
+            print("torch_res: ", idx.shape, idx.sum() / len(idx), torch.count_nonzero(idx),file=e)
 
 
 
 if __name__ == "__main__":
 
-    print("test_grouping_operation")
-    for i in range(10):
-        test_grouping_operation()
-    input()
-    print("test_BallQuery")
-    for i in range(10):
-        test_BallQuery()
-    print("test_GroupingOperation()")
-    for i in range(10):
-        test_GroupingOperation()
-    input()
-    print("test_GatherOperation")
-    for _ in range(10):
-        test_GatherOperation()
-    # print(sys.path)
-    print("test_3nn")
-    for _ in range(10):
-        test_3nn()
-    print("test_ThreeInterpolate")
-    for _ in range(10):
-        test_ThreeInterpolate()
-    print("test_roipool3d_gpu")
-    test_roipool3d_gpu()
-    print("test_pts_in_boxes3d_cpu")
-    test_pts_in_boxes3d_cpu()
+    # print("test_grouping_operation")
+    # for i in range(10):
+    #     test_grouping_operation()
+    # input()
+    # print("test_BallQuery")
+    # for i in range(10):
+    #     test_BallQuery()
+    # print("test_GroupingOperation()")
+    # for i in range(10):
+    #     test_GroupingOperation()
+    # input()
+    # print("test_GatherOperation")
+    # for _ in range(10):
+    #     test_GatherOperation()
+    # # print(sys.path)
+    # print("test_3nn")
+    # for _ in range(10):
+    #     test_3nn()
+    # print("test_ThreeInterpolate")
+    # for _ in range(10):
+    #     test_ThreeInterpolate()
+    # print("test_roipool3d_gpu")
+    # test_roipool3d_gpu()
+    # print("test_pts_in_boxes3d_cpu")
+    # test_pts_in_boxes3d_cpu()
 
-    print("test_roipool_pc_cpu")
-    test_roipool_pc_cpu()
+    # print("test_roipool_pc_cpu")
+    # test_roipool_pc_cpu()
 
-    print("test_boxes_iou_bev")
-    test_boxes_iou_bev()
-    print("test_boxes_iou3d_gpu")
-    test_boxes_iou3d_gpu()
+    # print("test_boxes_iou_bev")
+    # test_boxes_iou_bev()
+    # print("test_boxes_iou3d_gpu")
+    # test_boxes_iou3d_gpu()
 
-    for i in range(7):
-        print("test_nms_gpu")
-        test_nms_gpu()
+    # for i in range(7):
+    #     print("test_nms_gpu")
+    #     test_nms_gpu()
 
-    for i in range(7):
-        print("test_nms_normal_gpu",i)
-        test_nms_normal_gpu()
-
-    
-    print("done")
-    
+    # for i in range(7):
+    #     print("test_nms_normal_gpu",i)
+    #     test_nms_normal_gpu()
+    test_BallQuery()

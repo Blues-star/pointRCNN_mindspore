@@ -92,6 +92,8 @@ class RPN(nn.Cell):
         """
         pts_input = input_data['pts_input']
         backbone_xyz, backbone_features = self.backbone_net(pts_input)  # (B, N, 3), (B, C, N)
+        print('backbone_xyz: ', backbone_xyz.mean(), backbone_xyz.max())
+        print('backbone_features', backbone_features.mean())
 
         rpn_cls = self.rpn_cls_layer(backbone_features).swapaxes(1, 2)  # (B, N, 1)
         rpn_reg = self.rpn_reg_layer(backbone_features).swapaxes(1, 2)  # (B, N, C)

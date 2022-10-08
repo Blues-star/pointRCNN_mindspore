@@ -15,7 +15,6 @@ class Pointnet2MSG(nn.Cell):
     def __init__(self, input_channels=6, use_xyz=True):
         super().__init__()
 
-        # self.SA_modules = nn.ModuleList()
         self.SA_modules = nn.CellList()
         channel_in = input_channels
 
@@ -65,11 +64,14 @@ class Pointnet2MSG(nn.Cell):
         for i in range(len(self.SA_modules)):
             li_xyz, li_features = self.SA_modules[i](l_xyz[i], l_features[i])
             l_xyz.append(li_xyz)
+            print('li_xyz: ', li_xyz.mean())
+            print('li_features: ', li_features.mean())
             l_features.append(li_features)
 
         for i in range(-1, -(len(self.FP_modules) + 1), -1):
             l_features[i - 1] = self.FP_modules[i](
                 l_xyz[i - 1], l_xyz[i], l_features[i - 1], l_features[i]
             )
-
+            # print('li_features[i-1]: ', l_features[i - 1].mean())
+        
         return l_xyz[0], l_features[0]

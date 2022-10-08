@@ -44,11 +44,11 @@ class batchpad():
         BatchInfo = c[-1]
         assert len(self.cols) == len(c)-1
         batch_size = len(c[0])
-        assert batch_size > 1
+        # assert batch_size > 1
         for ii,key in enumerate(self.cols):
             if cfg.RPN.ENABLED and key == 'gt_boxes3d' or \
                     (cfg.RCNN.ENABLED and cfg.RCNN.ROI_SAMPLE_JIT and key in ['gt_boxes3d', 'roi_boxes3d']):
-                max_gt = 0
+                max_gt = 1
                 for k in range(batch_size):
                     max_gt = max(max_gt, c[ii][k].__len__())
                 batch_gt_boxes3d = np.zeros((batch_size, max_gt, 7), dtype=np.float32)
@@ -140,8 +140,8 @@ def create_dataloader(logger,args):
     # cols = ["sample_id","pts_input","pts_rect","pts_features","rpn_cls_label","rpn_reg_label","gt_boxes3d"]
     train_loader = ms.dataset.GeneratorDataset(train_set,num_parallel_workers=1,column_names=cols,shuffle=True)
     # train_loader.set_dynamic_columns(columns=colums) 
-    train_batch_loader = train_loader.batch(args.batch_size,drop_remainder=True,num_parallel_workers=4,per_batch_map=batchpad(cols=cols),python_multiprocessing=True)
-
+    train_batch_loader = train_loader.batch(args.batch_size,drop_remainder=True,num_parallel_workers=4,python_multiprocessing=True)
+    
     if args.train_with_eval:
         test_set = KittiRCNNDataset(root_dir=DATA_PATH, npoints=cfg.RPN.NUM_POINTS, split=cfg.TRAIN.VAL_SPLIT, mode='EVAL',
                                     logger=logger,
