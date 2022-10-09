@@ -22,17 +22,17 @@ For more details of PointRCNN, please refer to [our paper](https://arxiv.org/abs
 All the codes are tested in the following environment:
 * Linux (tested on Ubuntu 20.04)
 * Python 3.9+
-* PyTorch 1.0
+* PyTorch 1.9+
 * mindspore 1.8
 
 ### Install PointRCNN
 
 a. Clone the PointRCNN repository.
 ```shell
-git clone --recursive https://github.com/sshaoshuai/PointRCNN.git
+git clone https://github.com/Blues-star/pointRCNN_mingspore.git
 ```
 
-b. Install the dependent python libraries like `easydict`,`tqdm`, `tensorboardX ` in requiment.txt etc.
+b. Install the dependent python libraries like `easydict`,`tqdm`, `tensorboardX ` in `requiment.txt` etc.
 
 c. Build and install the `pointnet2_lib`, `iou3d`, `roipool3d` libraries by executing the following command:
 ```shell
@@ -59,7 +59,7 @@ Here the images are only used for visualization and the [road planes](https://dr
 
 
 ## performance
-The performance on validation set is as follows:
+The performance of pytorch version on validation set is as follows:
 ```
 Car AP@0.70, 0.70, 0.70:
 bbox AP:96.91, 89.53, 88.74
@@ -67,6 +67,15 @@ bev  AP:90.21, 87.89, 85.51
 3d   AP:89.19, 78.85, 77.91
 aos  AP:96.90, 89.41, 88.54
 ```
+The performance of mindspore version on validation set is as follows:
+```
+Car AP@0.70, 0.70, 0.70:
+bbox AP:97.5822, 89.4141, 86.9551
+bev  AP:90.2099, 85.4985, 80.1179
+3d   AP:88.8803, 78.4792, 77.3416
+aos  AP:97.57, 89.29, 86.77
+```
+
 ### Quick demo
 You could run the following command to evaluate the pretrained model (set `RPN.LOC_XZ_FINE=False` since it is a little different with the default configuration):
 ```
