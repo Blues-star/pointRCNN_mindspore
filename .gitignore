@@ -19,5 +19,8 @@ data/
 tests
 tools/log.txt
 .history/
-Makefile
 /output
+output_1008
+.vscode
+shape.txt
+*.ipynb
