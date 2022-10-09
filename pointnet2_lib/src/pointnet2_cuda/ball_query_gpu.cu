@@ -53,7 +53,7 @@ void ball_query_kernel_launcher_fast(int b, int n, int m, float radius, int nsam
     //      idx: (B, M, nsample)
 
     cudaError_t err;
-    fprintf(stderr, "b,n,m,r,nsample %d %d %d %f %d \n", b, n, m, radius, nsample);
+    //fprintf(stderr, "b,n,m,r,nsample %d %d %d %f %d \n", b, n, m, radius, nsample);
     dim3 blocks(DIVUP(m, THREADS_PER_BLOCK), b);  // blockIdx.x(col), blockIdx.y(row)
     dim3 threads(THREADS_PER_BLOCK);
 
@@ -61,8 +61,8 @@ void ball_query_kernel_launcher_fast(int b, int n, int m, float radius, int nsam
     // cudaDeviceSynchronize();  // for using printf in kernel function
     err = cudaGetLastError();
     if (cudaSuccess != err) {
-        fprintf(stderr, "CUDA kernel failed : %s \n", cudaGetErrorString(err));
-        fprintf(stderr, "Block: %u %u %u , threads: %u %u %u \n", blocks.x,blocks.y,blocks.z,threads.x,threads.y,threads.z);
+        //fprintf(stderr, "CUDA kernel failed : %s \n", cudaGetErrorString(err));
+        //fprintf(stderr, "Block: %u %u %u , threads: %u %u %u \n", blocks.x,blocks.y,blocks.z,threads.x,threads.y,threads.z);
         exit(-1);
     }
 }

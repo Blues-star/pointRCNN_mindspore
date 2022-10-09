@@ -38,8 +38,8 @@ void group_points_grad_kernel_launcher_fast(int b, int c, int n, int npoints, in
 
     err = cudaGetLastError();
     if (cudaSuccess != err) {
-        fprintf(stderr, "CUDA kernel failed : %s \n", cudaGetErrorString(err));
-        fprintf(stderr, "Block: %u %u %u , threads: %u %u %u \n", blocks.x,blocks.y,blocks.z,threads.x,threads.y,threads.z);
+        //fprintf(stderr, "CUDA kernel failed : %s \n", cudaGetErrorString(err));
+        //fprintf(stderr, "Block: %u %u %u , threads: %u %u %u \n", blocks.x,blocks.y,blocks.z,threads.x,threads.y,threads.z);
         exit(-1);
     }
 }
@@ -81,8 +81,8 @@ void group_points_kernel_launcher_fast(int b, int c, int n, int npoints, int nsa
     // cudaDeviceSynchronize();  // for using printf in kernel function
     err = cudaGetLastError();
     if (cudaSuccess != err) {
-        fprintf(stderr, "CUDA kernel failed : %s \n", cudaGetErrorString(err));
-        fprintf(stderr, "Block: %u %u %u , threads: %u %u %u \n", blocks.x,blocks.y,blocks.z,threads.x,threads.y,threads.z);
+        //fprintf(stderr, "CUDA kernel failed : %s \n", cudaGetErrorString(err));
+        //fprintf(stderr, "Block: %u %u %u , threads: %u %u %u \n", blocks.x,blocks.y,blocks.z,threads.x,threads.y,threads.z);
         exit(-1);
     }
 }

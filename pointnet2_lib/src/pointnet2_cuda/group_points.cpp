@@ -57,7 +57,7 @@ extern "C" int ms_group_points_wrapper_fast(int nparam, void **params, int *ndim
     auto n = tensors[2].item<int>();
     auto npoints = tensors[3].item<int>();
     auto nsample = tensors[4].item<int>();
-    fprintf(stderr, "b,c,n,npoints,nsample %d %d %d %d %d \n", b, c, n, npoints, nsample);
+    //fprintf(stderr, "b,c,n,npoints,nsample %d %d %d %d %d \n", b, c, n, npoints, nsample);
     group_points_wrapper_fast(b,c,n,npoints,nsample,tensors[5],tensors[6],tensors[7]);
     return 0;
 }

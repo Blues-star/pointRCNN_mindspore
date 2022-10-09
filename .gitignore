@@ -20,3 +20,4 @@ tests
 tools/log.txt
 .history/
 Makefile
+/output
